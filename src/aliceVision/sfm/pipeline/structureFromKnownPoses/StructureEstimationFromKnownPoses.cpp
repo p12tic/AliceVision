@@ -6,6 +6,7 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "StructureEstimationFromKnownPoses.hpp"
+#include <aliceVision/camera/Pinhole.hpp>
 #include <aliceVision/feature/metric.hpp>
 #include <aliceVision/matching/IndMatch.hpp>
 #include <aliceVision/matching/guidedMatching.hpp>
@@ -15,6 +16,7 @@
 #include <aliceVision/track/TracksBuilder.hpp>
 #include <aliceVision/sfm/sfmTriangulation.hpp>
 #include <aliceVision/system/ProgressDisplay.hpp>
+#include <aliceVision/system/ParallelFor.hpp>
 #include <aliceVision/config.hpp>
 
 namespace aliceVision {

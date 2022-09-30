@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <aliceVision/camera/Equidistant.hpp>
+#include <aliceVision/camera/Pinhole.hpp>
 #include <aliceVision/matching/IndMatch.hpp>
 #include <aliceVision/matchingImageCollection/GeometricFilterMatrix.hpp>
 #include <aliceVision/matchingImageCollection/geometricFilterUtils.hpp>

@@ -6,10 +6,13 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <aliceVision/sfm/BundleAdjustmentPanoramaCeres.hpp>
+#include <aliceVision/camera/Pinhole.hpp>
+#include <aliceVision/camera/Equidistant.hpp>
 #include <aliceVision/sfmData/SfMData.hpp>
 #include <aliceVision/vfs/filesystem.hpp>
 #include <aliceVision/config.hpp>
 #include <aliceVision/sfm/ResidualErrorRotationPriorFunctor.hpp>
+#include <aliceVision/system/Logger.hpp>
 #include <aliceVision/vfs/ostream.hpp>
 
 #include <ceres/rotation.h>

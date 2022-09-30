@@ -18,6 +18,8 @@
 #include <aliceVision/sfmDataIO/AlembicImporter.hpp>
 #endif
 
+#include <aliceVision/system/Logger.hpp>
+
 #include <aliceVision/vfs/filesystem.hpp>
 
 namespace aliceVision {

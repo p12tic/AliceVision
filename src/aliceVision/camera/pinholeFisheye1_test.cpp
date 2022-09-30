@@ -5,6 +5,8 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <aliceVision/camera/camera.hpp>
+#include <aliceVision/camera/PinholeRadial.hpp>
+#include <aliceVision/camera/PinholeFisheye1.hpp>
 
 #define BOOST_TEST_MODULE pinholeFisheye1
 

@@ -6,6 +6,7 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ReconstructionEngine_globalSfM.hpp"
+#include <aliceVision/camera/Pinhole.hpp>
 #include <aliceVision/sfmData/SfMData.hpp>
 #include <aliceVision/sfmDataIO/sfmDataIO.hpp>
 #include <aliceVision/multiview/triangulation/triangulationDLT.hpp>

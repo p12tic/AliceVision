@@ -5,7 +5,9 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "jsonIO.hpp"
-#include <aliceVision/camera/camera.hpp>
+#include <aliceVision/camera/Equidistant.hpp>
+#include <aliceVision/camera/IntrinsicsScaleOffset.hpp>
+#include <aliceVision/camera/IntrinsicsScaleOffsetDisto.hpp>
 #include <aliceVision/sfmDataIO/viewIO.hpp>
 #include <aliceVision/system/ParallelFor.hpp>
 #include <aliceVision/vfs/istream.hpp>

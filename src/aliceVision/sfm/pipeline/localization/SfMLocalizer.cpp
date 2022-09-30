@@ -7,6 +7,7 @@
 
 #include "SfMLocalizer.hpp"
 #include <aliceVision/config.hpp>
+#include <aliceVision/camera/Pinhole.hpp>
 #include <aliceVision/sfm/BundleAdjustmentCeres.hpp>
 #include <aliceVision/sfm/BundleAdjustmentSymbolicCeres.hpp>
 #include <aliceVision/robustEstimation/ACRansac.hpp>

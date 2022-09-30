@@ -6,6 +6,7 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "AlembicExporter.hpp"
+#include <aliceVision/camera/Equidistant.hpp>
 #include <aliceVision/version.hpp>
 #include <aliceVision/vfs/filesystem.hpp>
 

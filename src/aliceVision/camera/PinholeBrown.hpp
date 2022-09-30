@@ -9,6 +9,7 @@
 
 #include <aliceVision/numeric/numeric.hpp>
 #include <aliceVision/camera/cameraCommon.hpp>
+#include <aliceVision/camera/Pinhole.hpp>
 #include <aliceVision/camera/DistortionBrown.hpp>
 
 #include <vector>

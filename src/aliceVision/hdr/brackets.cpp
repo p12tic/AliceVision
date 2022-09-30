@@ -1,6 +1,7 @@
 #include "brackets.hpp"
 
 #include <aliceVision/numeric/numeric.hpp>
+#include <aliceVision/system/Logger.hpp>
 #include <aliceVision/vfs/filesystem.hpp>
 
 namespace aliceVision {

@@ -8,6 +8,7 @@
 #include "gtIO.hpp"
 #include <aliceVision/sfmDataIO/viewIO.hpp>
 #include <aliceVision/sfmData/uid.hpp>
+#include <aliceVision/system/Logger.hpp>
 #include <aliceVision/vfs/filesystem.hpp>
 #include <aliceVision/vfs/istream.hpp>
 

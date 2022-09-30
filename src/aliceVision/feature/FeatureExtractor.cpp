@@ -7,6 +7,7 @@
 #include "FeatureExtractor.hpp"
 #include <aliceVision/image/io.hpp>
 #include <aliceVision/system/MemoryInfo.hpp>
+#include <aliceVision/system/Logger.hpp>
 #include <aliceVision/system/ParallelFor.hpp>
 #include <aliceVision/vfs/filesystem.hpp>
 #include <iomanip>

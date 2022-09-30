@@ -7,6 +7,9 @@
 
 #include "syntheticScene.hpp"
 #include <aliceVision/sfm/sfm.hpp>
+#include <aliceVision/camera/Pinhole.hpp>
+#include <aliceVision/camera/PinholeRadial.hpp>
+#include <aliceVision/camera/PinholeFisheye.hpp>
 
 #include <random>
 #include <iostream>

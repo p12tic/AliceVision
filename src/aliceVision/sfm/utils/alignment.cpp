@@ -8,6 +8,7 @@
 #include <aliceVision/sfm/utils/alignment.hpp>
 #include <aliceVision/sfm/liealgebra.hpp>
 #include <aliceVision/geometry/rigidTransformation3D.hpp>
+#include <aliceVision/system/Logger.hpp>
 #include <aliceVision/stl/regex.hpp>
 
 #include <boost/accumulators/accumulators.hpp>

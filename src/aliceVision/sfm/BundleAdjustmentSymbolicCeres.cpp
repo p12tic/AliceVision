@@ -11,6 +11,7 @@
 #include <aliceVision/config.hpp>
 #include <aliceVision/camera/Equidistant.hpp>
 #include <aliceVision/utils/CeresUtils.hpp>
+#include <aliceVision/system/Logger.hpp>
 #include <aliceVision/vfs/ostream.hpp>
 
 #include <ceres/rotation.h>

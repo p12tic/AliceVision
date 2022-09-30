@@ -10,6 +10,7 @@
 #include <aliceVision/system/ParallelFor.hpp>
 #include <aliceVision/system/ProgressDisplay.hpp>
 #include <aliceVision/vfs/filesystem.hpp>
+#include <aliceVision/system/Logger.hpp>
 
 #include <atomic>
 #include <cassert>

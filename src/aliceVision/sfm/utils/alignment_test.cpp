@@ -6,6 +6,7 @@
 
 #include <aliceVision/sfm/utils/alignment.hpp>
 #include <aliceVision/multiview/NViewDataSet.hpp>
+#include <aliceVision/system/Logger.hpp>
 
 #include <cmath>
 #include <cstdio>

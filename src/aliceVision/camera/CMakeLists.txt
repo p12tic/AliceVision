@@ -23,9 +23,13 @@ set(camera_files_headers
 	PinholeRadial.hpp
 )
 
-alicevision_add_interface(aliceVision_camera
-  SOURCES ${camera_files_headers}
-  LINKS
+set(camera_files_sources
+    camera.cpp
+)
+
+alicevision_add_library(aliceVision_camera
+  SOURCES ${camera_files_headers} ${camera_files_sources}
+  PUBLIC_LINKS
     aliceVision_numeric
     aliceVision_geometry
     aliceVision_image

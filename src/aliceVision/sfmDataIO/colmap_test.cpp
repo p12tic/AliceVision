@@ -6,12 +6,18 @@
 
 #define BOOST_TEST_MODULE colmap
 
-
 #include <aliceVision/camera/cameraCommon.hpp>
-
+#include <aliceVision/camera/Equidistant.hpp>
+#include <aliceVision/camera/EquidistantRadial.hpp>
 #include <aliceVision/sfmDataIO/colmap.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/test/tools/floating_point_comparison.hpp>
+#include <aliceVision/camera/Pinhole.hpp>
+#include <aliceVision/camera/PinholeRadial.hpp>
+#include <aliceVision/camera/Pinhole3DE.hpp>
+#include <aliceVision/camera/PinholeBrown.hpp>
+#include <aliceVision/camera/PinholeFisheye.hpp>
+#include <aliceVision/camera/PinholeFisheye1.hpp>
 #include <aliceVision/unitTest.hpp>
 
 using namespace aliceVision;

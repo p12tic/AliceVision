@@ -6,10 +6,12 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "sfmTriangulation.hpp"
+#include <aliceVision/camera/Pinhole.hpp>
 #include <aliceVision/multiview/triangulation/Triangulation.hpp>
 #include <aliceVision/robustEstimation/randSampling.hpp>
 #include <aliceVision/system/ParallelFor.hpp>
 #include <aliceVision/system/ProgressDisplay.hpp>
+#include <aliceVision/system/Logger.hpp>
 #include <aliceVision/config.hpp>
 
 #include <deque>

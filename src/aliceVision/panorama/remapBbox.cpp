@@ -1,5 +1,6 @@
 #include "remapBbox.hpp"
 #include "sphericalMapping.hpp"
+#include <aliceVision/camera/Equidistant.hpp>
 
 namespace aliceVision
 {

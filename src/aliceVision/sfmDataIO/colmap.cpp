@@ -7,6 +7,11 @@
 #include "colmap.hpp"
 #include <aliceVision/geometry/Pose3.hpp>
 #include <aliceVision/camera/cameraCommon.hpp>
+#include <aliceVision/camera/PinholeBrown.hpp>
+#include <aliceVision/camera/PinholeRadial.hpp>
+#include <aliceVision/camera/PinholeFisheye.hpp>
+#include <aliceVision/camera/PinholeFisheye1.hpp>
+#include <aliceVision/system/Logger.hpp>
 
 #include <boost/filesystem.hpp>
 

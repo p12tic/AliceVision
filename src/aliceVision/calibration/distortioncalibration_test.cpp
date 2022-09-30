@@ -5,6 +5,7 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <aliceVision/camera/camera.hpp>
+#include <aliceVision/camera/Pinhole3DE.hpp>
 #include <aliceVision/calibration/distortionEstimation.hpp>
 
 #define BOOST_TEST_MODULE distortioncalibration

@@ -10,6 +10,7 @@
 #include <aliceVision/sfm/ResidualErrorConstraintFunctor.hpp>
 #include <aliceVision/sfm/ResidualErrorRotationPriorFunctor.hpp>
 #include <aliceVision/sfmData/SfMData.hpp>
+#include <aliceVision/system/Logger.hpp>
 #include <aliceVision/utils/CeresUtils.hpp>
 #include <aliceVision/vfs/filesystem.hpp>
 #include <aliceVision/config.hpp>

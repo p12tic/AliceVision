@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <aliceVision/camera/PinholeRadial.hpp>
 #include <aliceVision/sfm/pipeline/localization/SfMLocalizer.hpp>
 #include <aliceVision/voctree/Database.hpp>
 

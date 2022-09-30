@@ -6,6 +6,7 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <aliceVision/camera/camera.hpp>
+#include <aliceVision/camera/PinholeBrown.hpp>
 
 #define BOOST_TEST_MODULE pinholeBrown
 

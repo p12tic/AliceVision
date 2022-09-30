@@ -8,6 +8,7 @@
 
 #include <aliceVision/feature/RegionsPerView.hpp>
 #include <aliceVision/sfm/pipeline/regionsIO.hpp>
+#include <aliceVision/system/Logger.hpp>
 
 
 namespace aliceVision {

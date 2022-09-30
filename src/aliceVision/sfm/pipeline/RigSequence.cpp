@@ -6,6 +6,7 @@
 
 #include "RigSequence.hpp"
 #include <aliceVision/stl/mapUtils.hpp>
+#include <aliceVision/system/Logger.hpp>
 
 #include <boost/functional/hash.hpp>
 

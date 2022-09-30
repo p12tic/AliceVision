@@ -5,6 +5,8 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "sceneSample.hpp"
+#include <aliceVision/camera/Pinhole.hpp>
+#include <aliceVision/camera/PinholeRadial.hpp>
 
 namespace aliceVision {
 namespace sfmDataIO {

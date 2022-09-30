@@ -6,6 +6,9 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "AlembicImporter.hpp"
+#include <aliceVision/camera/Equidistant.hpp>
+#include <aliceVision/camera/IntrinsicsScaleOffset.hpp>
+#include <aliceVision/system/Logger.hpp>
 
 #include <Alembic/AbcGeom/All.h>
 #include <Alembic/AbcCoreFactory/All.h>
