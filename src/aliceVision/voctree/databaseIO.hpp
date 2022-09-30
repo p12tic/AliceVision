@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <aliceVision/sfmData/SfMData.hpp>
 #include <aliceVision/voctree/Database.hpp>
 #include <aliceVision/voctree/VocabularyTree.hpp>
 

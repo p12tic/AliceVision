@@ -1,11 +1,13 @@
 # Headers
 set(imageMatching_files_headers
     ImageMatching.hpp
+    ImageMatchingTypes.hpp
 )
 
 # Sources
 set(imageMatching_files_sources
     ImageMatching.cpp
+    ImageMatchingTypes.cpp
 )
 
 alicevision_add_library(aliceVision_imageMatching
