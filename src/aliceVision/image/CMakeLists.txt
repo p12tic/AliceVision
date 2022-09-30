@@ -5,6 +5,7 @@ set(image_files_headers
   all.hpp
   Image.hpp
   imageAlgo.hpp
+  ImageSpan.hpp
   concat.hpp
   convertion.hpp
   convolutionBase.hpp
