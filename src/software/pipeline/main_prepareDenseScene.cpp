@@ -14,9 +14,10 @@
 #include <aliceVision/system/main.hpp>
 #include <aliceVision/config.hpp>
 #include <aliceVision/sfmDataIO/viewIO.hpp>
+#include <aliceVision/vfs/filesystem.hpp>
+#include <aliceVision/vfs/ostream.hpp>
 
 #include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -25,7 +26,6 @@
 #include <set>
 #include <iterator>
 #include <iomanip>
-#include <fstream>
 
 // These constants define the current software version.
 // They must be updated when the command line is changed.
@@ -40,7 +40,6 @@ using namespace aliceVision::sfmData;
 using namespace aliceVision::sfmDataIO;
 
 namespace po = boost::program_options;
-namespace fs = boost::filesystem;
 
 template <class ImageT, class MaskFuncT>
 void process(const std::string &dstColorImage, const IntrinsicBase* cam, const oiio::ParamValueList & metadata, const std::string & srcImage, bool evCorrection, float exposureCompensation, MaskFuncT && maskFunc)
@@ -162,14 +161,14 @@ bool prepareDenseScene(const SfMData& sfmData,
 
       if(saveMatricesFiles)
       {
-        std::ofstream fileP((fs::path(outFolder) / (baseFilename + "_P.txt")).string());
+        vfs::ostream fileP((vfs::path(outFolder) / (baseFilename + "_P.txt")).string());
         fileP << std::setprecision(10)
              << P(0, 0) << " " << P(0, 1) << " " << P(0, 2) << " " << P(0, 3) << "\n"
              << P(1, 0) << " " << P(1, 1) << " " << P(1, 2) << " " << P(1, 3) << "\n"
              << P(2, 0) << " " << P(2, 1) << " " << P(2, 2) << " " << P(2, 3) << "\n";
         fileP.close();
 
-        std::ofstream fileKRt((fs::path(outFolder) / (baseFilename + "_KRt.txt")).string());
+        vfs::ostream fileKRt((vfs::path(outFolder) / (baseFilename + "_KRt.txt")).string());
         fileKRt << std::setprecision(10)
              << K(0, 0) << " " << K(0, 1) << " " << K(0, 2) << "\n"
              << K(1, 0) << " " << K(1, 1) << " " << K(1, 2) << "\n"
@@ -230,7 +229,7 @@ bool prepareDenseScene(const SfMData& sfmData,
 
           srcImage = paths[0];
       }
-      const std::string dstColorImage = (fs::path(outFolder) / (baseFilename + "." + image::EImageFileType_enumToString(outputFileType))).string();
+      const std::string dstColorImage = (vfs::path(outFolder) / (baseFilename + "." + image::EImageFileType_enumToString(outputFileType))).string();
       const IntrinsicBase* cam = iterIntrinsic->second.get();
 
       // add exposure values to images metadata
@@ -364,8 +363,8 @@ int aliceVision_main(int argc, char *argv[])
   image::EImageFileType outputFileType = image::EImageFileType_stringToEnum(outImageFileTypeName);
 
   // Create output dir
-  if(!fs::exists(outFolder))
-    fs::create_directory(outFolder);
+  if (!vfs::exists(outFolder))
+    vfs::create_directory(outFolder);
 
   // Read the input SfM scene
   SfMData sfmData;
