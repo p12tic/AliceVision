@@ -34,6 +34,7 @@ alicevision_add_library(aliceVision_mvsData
     aliceVision_system
     aliceVision_numeric
     aliceVision_image
+    aliceVision_vfs
     ZLIB::ZLIB
     Boost::filesystem
     Boost::boost
