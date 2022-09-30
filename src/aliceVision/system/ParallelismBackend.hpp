@@ -50,5 +50,8 @@ public:
 
 IParallelismBackend& getCurrentParallelismBackend();
 
+/// Cannot be invoked after the first call to getCurrentParallelismBackend()
+void setCurrentParallelistBackend(IParallelismBackend& backend);
+
 } // namespace system
 } // namespace aliceVision

@@ -26,7 +26,10 @@ void ParallelLoopManagerSingleThread::submit(const std::function<void()>& callba
 
 IParallelismBackend::~IParallelismBackend() = default;
 
-IParallelismBackend& getCurrentParallelismBackend()
+bool s_getCurrentParallelismBackendCalled = false;
+IParallelismBackend* s_parallelismBackendOverride = nullptr;
+
+static IParallelismBackend& getDefaultParallelismBackend()
 {
 #if ALICEVISION_HAVE_TBB
     static tbb::task_arena taskArena;
@@ -36,6 +39,26 @@ IParallelismBackend& getCurrentParallelismBackend()
     static ParallelismBackendOpenMP backend;
     return backend;
 #endif
+}
+
+IParallelismBackend& getCurrentParallelismBackend()
+{
+    s_getCurrentParallelismBackendCalled = true;
+    if (s_parallelismBackendOverride != nullptr)
+    {
+        return *s_parallelismBackendOverride;
+    }
+    return getDefaultParallelismBackend();
+}
+
+void setCurrentParallelistBackend(IParallelismBackend& backend)
+{
+    if (s_getCurrentParallelismBackendCalled)
+    {
+        throw std::runtime_error("setCurrentParallelistBackend must be called before any other "
+                                 "parallelism operations");
+    }
+    s_parallelismBackendOverride = &backend;
 }
 
 } // namespace system
