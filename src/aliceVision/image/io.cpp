@@ -24,9 +24,16 @@
 #include <stdexcept>
 #include <iostream>
 #include <cmath>
+#include <vector>
 
 namespace aliceVision {
 namespace image {
+
+struct ImageVfsRawData : public vfs::special_data
+{
+    oiio::ImageSpec spec;
+    std::vector<char> data;
+};
 
 std::string EImageColorSpace_informations()
 {
@@ -352,6 +359,21 @@ oiio::ParamValueList readImageMetadata(const std::string& path, int& width, int&
 
 oiio::ImageSpec readImageSpec(const std::string& path)
 {
+    if (vfs::is_virtual_path(path))
+    {
+        auto data = vfs::get_special_data_if_exists(path);
+        if (data)
+        {
+            auto imageData = std::dynamic_pointer_cast<ImageVfsRawData>(data);
+            if (!imageData)
+            {
+                ALICEVISION_THROW_ERROR("Image data from VFS is of wrong type: "
+                                        << typeid(*data).name() << " at '" << path << "'.");
+            }
+            return imageData->spec;
+        }
+    }
+
   std::unique_ptr<VfsIOReadProxy> ioproxy;
   if (vfs::is_virtual_path(path))
   {
@@ -422,6 +444,45 @@ void getBufferFromImage(Image<RGBColor>& image, oiio::ImageBuf& buffer)
   getBufferFromImage(image, oiio::TypeDesc::UINT8, 3, buffer);
 }
 
+void readImageToFormat(oiio::ImageBuf& inBuf, oiio::ImageSpec& configSpec,
+                       std::unique_ptr<VfsIOReadProxy>& ioproxy,
+                       oiio::TypeDesc format, const std::string& path)
+{
+    if (vfs::is_virtual_path(path))
+    {
+        auto data = vfs::get_special_data_if_exists(path);
+        if (data)
+        {
+            auto imageData = std::dynamic_pointer_cast<ImageVfsRawData>(data);
+            if (!imageData)
+            {
+                ALICEVISION_THROW_ERROR("Image data from VFS is of wrong type: "
+                                        << typeid(*data).name() << " at '" << path << "'.");
+            }
+            configSpec = imageData->spec;
+            inBuf.reset(imageData->spec, imageData->data.data());
+
+            if (configSpec.format != oiio::TypeDesc::FLOAT)
+            {
+                oiio::ImageBuf formatBuf;
+                formatBuf.copy(inBuf, oiio::TypeDesc::FLOAT);
+                inBuf.swap(formatBuf);
+            }
+        }
+        else
+        {
+            ioproxy = std::make_unique<VfsIOReadProxy>(path);
+            inBuf.reset(path, 0, 0, NULL, &configSpec, ioproxy.get());
+            inBuf.read(0, 0, true, format);
+        }
+    }
+    else
+    {
+        inBuf.reset(path, 0, 0, NULL, &configSpec, nullptr);
+        inBuf.read(0, 0, true, format);
+    }
+}
+
 template<typename T>
 void readImage(const std::string& path,
                oiio::TypeDesc format,
@@ -450,14 +511,11 @@ void readImage(const std::string& path,
   configSpec.attribute("raw:use_camera_matrix", 3); // use embeded color profile
   configSpec.attribute("raw:ColorSpace", "Linear"); // use linear colorspace with sRGB primaries
 
-  std::unique_ptr<VfsIOReadProxy> ioproxy;
-  if (vfs::is_virtual_path(path))
-  {
-    ioproxy = std::make_unique<VfsIOReadProxy>(path);
-  }
-  oiio::ImageBuf inBuf(path, 0, 0, NULL, &configSpec, ioproxy.get());
+    oiio::ImageBuf inBuf;
+    std::unique_ptr<VfsIOReadProxy> ioproxy;
 
-  inBuf.read(0, 0, true, oiio::TypeDesc::FLOAT); // force image convertion to float (for grayscale and color space convertion)
+    // force image convertion to float (for grayscale and color space convertion)
+    readImageToFormat(inBuf, configSpec, ioproxy, oiio::TypeDesc::FLOAT, path);
 
   if(!inBuf.initialized())
     ALICEVISION_THROW_ERROR("Failed to open the image file: '" << path << "'.");
@@ -543,15 +601,10 @@ void readImageNoFloat(const std::string& path,
 {
   oiio::ImageSpec configSpec;
 
+  oiio::ImageBuf inBuf;
   std::unique_ptr<VfsIOReadProxy> ioproxy;
-  if (vfs::is_virtual_path(path))
-  {
-    ioproxy = std::make_unique<VfsIOReadProxy>(path);
-  }
 
-  oiio::ImageBuf inBuf(path, 0, 0, NULL, &configSpec, ioproxy.get());
-
-  inBuf.read(0, 0, true, format);
+  readImageToFormat(inBuf, configSpec, ioproxy, format, path);
 
   if(!inBuf.initialized())
   {
@@ -590,6 +643,16 @@ bool containsHalfFloatOverflow(const oiio::ImageBuf& image)
             return true;
     }
     return false;
+}
+
+void writeImageVirtualPathSpecialData(const vfs::path& path, const oiio::ImageBuf& imgBuf)
+{
+    vfs::remove(path);
+    auto memoryData = std::make_shared<ImageVfsRawData>();
+    memoryData->spec = imgBuf.spec();
+    memoryData->data.resize(imgBuf.spec().image_bytes());
+    imgBuf.get_pixels(oiio::ROI::All(), imgBuf.spec().format, memoryData->data.data());
+    vfs::set_special_data(path, memoryData);
 }
 
 template<typename T>
@@ -709,6 +772,12 @@ void writeImage(const std::string& path,
     }
   }
 
+    if (vfs::is_virtual_path(bPath))
+    {
+        writeImageVirtualPathSpecialData(bPath, outBuf);
+        return;
+    }
+
   std::unique_ptr<VfsIOWriteProxy> ioproxy;
   if (vfs::is_virtual_path(tmpPath))
   {
@@ -762,6 +831,12 @@ void writeImageNoFloat(const std::string& path,
     tmpBuf.copy(outBuf, typeDesc); // override format, use half instead of float
     outBuf.swap(tmpBuf);
   }
+
+    if (vfs::is_virtual_path(bPath))
+    {
+        writeImageVirtualPathSpecialData(bPath, outBuf);
+        return;
+    }
 
   std::unique_ptr<VfsIOWriteProxy> ioproxy;
   if (vfs::is_virtual_path(tmpPath))
