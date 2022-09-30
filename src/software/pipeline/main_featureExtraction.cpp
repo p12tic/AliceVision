@@ -19,12 +19,13 @@
 #include <aliceVision/system/Logger.hpp>
 #include <aliceVision/system/main.hpp>
 #include <aliceVision/system/cmdline.hpp>
+#include <aliceVision/vfs/filesystem.hpp>
 #include <aliceVision/config.hpp>
 
 #include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
 
 #include <string>
+#include <sstream>
 #include <iostream>
 #include <functional>
 #include <memory>
@@ -37,7 +38,6 @@
 using namespace aliceVision;
 
 namespace po = boost::program_options;
-namespace fs = boost::filesystem;
 
 /// - Compute view image description (feature & descriptor extraction)
 /// - Export computed data
@@ -141,9 +141,9 @@ int aliceVision_main(int argc, char **argv)
   }
 
   // create output folder
-  if(!fs::exists(outputFolder))
+  if (!vfs::exists(outputFolder))
   {
-    if(!fs::create_directory(outputFolder))
+    if (!vfs::create_directory(outputFolder))
     {
       ALICEVISION_LOG_ERROR("Cannot create output folder");
       return EXIT_FAILURE;
