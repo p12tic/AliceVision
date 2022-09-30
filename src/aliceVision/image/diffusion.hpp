@@ -9,6 +9,7 @@
 
 #include <aliceVision/config.hpp>
 #include <aliceVision/alicevision_omp.hpp>
+#include <aliceVision/system/ParallelFor.hpp>
 
 #include <vector>
 
@@ -96,17 +97,15 @@ void ImageFEDCentral( const Image & src , const Image & diff , const typename Im
 template< typename Image >
 void ImageFEDCentralCPPThread( const Image & src , const Image & diff , const typename Image::Tpixel half_t , Image & out )
 {
-  const int nb_thread = omp_get_max_threads();
-
   // Compute ranges
   std::vector< int > range;
-  SplitRange( 1 , (int) ( src.rows() - 1 ) , nb_thread , range ) ;
+  SplitRange( 1 , (int) ( src.rows() - 1 ) , system::getMaxParallelThreadCount(), range ) ;
 
-  #pragma omp parallel for schedule(dynamic)
-  for( int i = 1 ; i < static_cast<int>(range.size()) ; ++i )
+  system::parallelFor<int>(1, range.size(), system::ParallelSettings().setDynamicScheduling(),
+                           [&](int i)
   {
     ImageFEDCentral( src, diff, half_t, out, range[i-1] , range[i]) ;
-  }
+  });
 }
 
 /**
