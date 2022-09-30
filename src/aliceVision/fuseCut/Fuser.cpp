@@ -17,9 +17,9 @@
 #include <aliceVision/mvsUtils/fileIO.hpp>
 #include <aliceVision/image/io.hpp>
 #include <aliceVision/image/imageAlgo.hpp>
+#include <aliceVision/vfs/filesystem.hpp>
 
 #include <boost/atomic/atomic_ref.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics.hpp>
 
@@ -27,8 +27,6 @@
 
 namespace aliceVision {
 namespace fuseCut {
-
-namespace bfs = boost::filesystem;
 
 unsigned long computeNumberOfAllPoints(const mvsUtils::MultiViewParams& mp, int scale)
 {
@@ -150,7 +148,7 @@ void Fuser::filterGroups(const std::vector<int>& cams, float pixToleranceFactor,
 // minNumOfModals number of other cams including this cam ... minNumOfModals /in 2,3,...
 bool Fuser::filterGroupsRC(int rc, float pixToleranceFactor, int pixSizeBall, int pixSizeBallWSP, int nNearestCams)
 {
-    if (bfs::exists(getFileNameFromIndex(_mp, rc, mvsUtils::EFileType::nmodMap)))
+    if (vfs::exists(getFileNameFromIndex(_mp, rc, mvsUtils::EFileType::nmodMap)))
     {
         return true;
     }
@@ -738,9 +736,9 @@ std::string generateTempPtsSimsFiles(const std::string& tmpDir, mvsUtils::MultiV
     ALICEVISION_LOG_INFO("generating temp files.");
     std::string depthMapsPtsSimsTmpDir = tmpDir + "depthMapsPtsSimsTmp/";
 
-    if (!bfs::is_directory(depthMapsPtsSimsTmpDir))
+    if (!vfs::is_directory(depthMapsPtsSimsTmpDir))
     {
-        bfs::create_directory(depthMapsPtsSimsTmpDir);
+        vfs::create_directory(depthMapsPtsSimsTmpDir);
 
         int scale = 0;
         int scaleuse = std::max(1, scale);
@@ -909,7 +907,7 @@ void deleteTempPtsSimsFiles(mvsUtils::MultiViewParams& mp, const std::string& de
         remove(ptsfn.c_str());
         remove(simsfn.c_str());
     }
-    bfs::remove_all(depthMapsPtsSimsTmpDir);
+    vfs::remove_all(depthMapsPtsSimsTmpDir);
 }
 
 } // namespace fuseCut
