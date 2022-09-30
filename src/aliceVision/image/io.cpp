@@ -636,10 +636,8 @@ void writeImage(const std::string& path,
       imageSpec.set_roi_full(roi);
   }
 
-  oiio::ImageBuf imgBuf = oiio::ImageBuf(imageSpec, const_cast<T*>(image.data())); // original image buffer
-  oiio::ImageBuf* outBuf = &imgBuf;  // buffer to write
+    oiio::ImageBuf outBuf = oiio::ImageBuf(imageSpec, const_cast<T*>(image.data())); // original image buffer
 
-  oiio::ImageBuf colorspaceBuf; // buffer for image colorspace modification
     if (fromColorSpace == toColorSpace)
     {
         // Do nothing. Note that calling imageAlgo::colorconvert() will copy the source buffer
@@ -653,20 +651,21 @@ void writeImage(const std::string& path,
             throw std::runtime_error("ALICEVISION_ROOT is not defined, OCIO config file cannot be accessed.");
         }
 
+        oiio::ImageBuf tmpBuf;
         oiio::ColorConfig colorConfig(colorConfigPath);
-        oiio::ImageBufAlgo::colorconvert(colorspaceBuf, *outBuf,
+        oiio::ImageBufAlgo::colorconvert(tmpBuf, outBuf,
                                          EImageColorSpace_enumToOIIOString(fromColorSpace),
                                          EImageColorSpace_enumToOIIOString(toColorSpace), true, "", "",
                                          &colorConfig);
-        outBuf = &colorspaceBuf;
+        outBuf.swap(tmpBuf);
     }
     else
     {
-        imageAlgo::colorconvert(colorspaceBuf, *outBuf, fromColorSpace, toColorSpace);
-        outBuf = &colorspaceBuf;
+        oiio::ImageBuf tmpBuf;
+        imageAlgo::colorconvert(tmpBuf, outBuf, fromColorSpace, toColorSpace);
+        outBuf.swap(tmpBuf);
     }
 
-  oiio::ImageBuf formatBuf;  // buffer for image format modification
   if(isEXR)
   {
     // Storage data type may be saved as attributes to formats that support it and then come back
@@ -683,7 +682,7 @@ void writeImage(const std::string& path,
 
     if (storageDataType == EStorageDataType::Auto)
     {
-        if (containsHalfFloatOverflow(*outBuf))
+        if (containsHalfFloatOverflow(outBuf))
         {
             storageDataType = EStorageDataType::Float;
         }
@@ -696,15 +695,17 @@ void writeImage(const std::string& path,
 
     if (storageDataType == EStorageDataType::HalfFinite)
     {
-        oiio::ImageBufAlgo::clamp(colorspaceBuf, *outBuf, -HALF_MAX, HALF_MAX);
-        outBuf = &colorspaceBuf;
+        oiio::ImageBuf tmpBuf;
+        oiio::ImageBufAlgo::clamp(tmpBuf, outBuf, -HALF_MAX, HALF_MAX);
+        outBuf.swap(tmpBuf);
     }
 
     if (storageDataType == EStorageDataType::Half ||
         storageDataType == EStorageDataType::HalfFinite)
     {
-        formatBuf.copy(*outBuf, oiio::TypeDesc::HALF); // override format, use half instead of float
-        outBuf = &formatBuf;
+        oiio::ImageBuf tmpBuf;
+        tmpBuf.copy(outBuf, oiio::TypeDesc::HALF); // override format, use half instead of float
+        outBuf.swap(tmpBuf);
     }
   }
 
@@ -712,11 +713,11 @@ void writeImage(const std::string& path,
   if (vfs::is_virtual_path(tmpPath))
   {
     ioproxy = std::make_unique<VfsIOWriteProxy>(tmpPath);
-    outBuf->set_write_ioproxy(ioproxy.get());
+    outBuf.set_write_ioproxy(ioproxy.get());
   }
 
   // write image
-  if(!outBuf->write(tmpPath))
+  if(!outBuf.write(tmpPath))
     throw std::runtime_error("Can't write output image file '" + path + "'.");
 
   // rename temporary filename
@@ -753,26 +754,24 @@ void writeImageNoFloat(const std::string& path,
   imageSpec.attribute("jpeg:subsampling", "4:4:4");           // if possible, always subsampling 4:4:4 for jpeg
   imageSpec.attribute("compression", isEXR ? "zips" : "none"); // if possible, set compression (zips for EXR, none for the other)
 
-  oiio::ImageBuf imgBuf = oiio::ImageBuf(imageSpec, const_cast<T*>(image.data())); // original image buffer
-  oiio::ImageBuf* outBuf = &imgBuf;  // buffer to write
+  oiio::ImageBuf outBuf = oiio::ImageBuf(imageSpec, const_cast<T*>(image.data())); // original image buffer
 
-  oiio::ImageBuf formatBuf;  // buffer for image format modification
   if(isEXR)
   {
-    
-    formatBuf.copy(*outBuf, typeDesc); // override format, use half instead of float
-    outBuf = &formatBuf;
+    oiio::ImageBuf tmpBuf;
+    tmpBuf.copy(outBuf, typeDesc); // override format, use half instead of float
+    outBuf.swap(tmpBuf);
   }
 
   std::unique_ptr<VfsIOWriteProxy> ioproxy;
   if (vfs::is_virtual_path(tmpPath))
   {
     ioproxy = std::make_unique<VfsIOWriteProxy>(tmpPath);
-    outBuf->set_write_ioproxy(ioproxy.get());
+    outBuf.set_write_ioproxy(ioproxy.get());
   }
 
   // write image
-  if(!outBuf->write(tmpPath))
+  if(!outBuf.write(tmpPath))
     throw std::runtime_error("Can't write output image file '" + path + "'.");
 
   // rename temporary filename
