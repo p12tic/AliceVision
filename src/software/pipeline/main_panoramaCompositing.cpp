@@ -539,7 +539,8 @@ bool processImage(const PanoramaMap & panoramaMap, const std::string & composite
     metadata.push_back(oiio::ParamValue("AliceVision:panoramaWidth", int(panoramaMap.getWidth())));
     metadata.push_back(oiio::ParamValue("AliceVision:panoramaHeight", int(panoramaMap.getHeight())));
 
-    image::writeImage(outputFilePath, output, image::EImageColorSpace::LINEAR, metadata);
+    image::writeImage(outputFilePath, output,
+                      image::ImageWriteOptions().toColorSpace(image::EImageColorSpace::LINEAR), metadata);
 
     return true;
 }

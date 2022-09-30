@@ -164,7 +164,7 @@ int aliceVision_main(int argc, char** argv)
 
     oiio::ParamValueList targetMetadata;
     targetMetadata.push_back(oiio::ParamValue("AliceVision:storageDataType", image::EStorageDataType_enumToString(storageDataType)));
-    image::writeImage(outputPanoramaPath, panorama, image::EImageColorSpace::AUTO, targetMetadata);
+    image::writeImage(outputPanoramaPath, panorama, image::ImageWriteOptions(), targetMetadata);
 
     return EXIT_SUCCESS;
 }
