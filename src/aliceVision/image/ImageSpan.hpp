@@ -28,8 +28,25 @@ public:
     ImageSpan(const Image<T>& other) :
         _data{const_cast<T*>(other.data())},
         _width{other.Width()},
-        _height{other.Height()}
+        _height{other.Height()},
+        _strideBytes{static_cast<int>(other.Width() * sizeof(T))}
     {}
+
+    ImageSpan(T* data, int width, int height) :
+        _data{data},
+        _width{width},
+        _height{height},
+        _strideBytes{static_cast<int>(width * sizeof(T))}
+    {
+    }
+
+    ImageSpan(T* data, int width, int height, int strideBytes) :
+        _data{data},
+        _width{width},
+        _height{height},
+        _strideBytes{strideBytes}
+    {
+    }
 
     ImageSpan& operator=(const ImageSpan& other) = default;
     ImageSpan& operator=(const Image<T>& other)
@@ -37,6 +54,7 @@ public:
         _data = other.data();
         _width = other.Width();
         _height = other.Height();
+        _strideBytes = other.Width() * sizeof(T);
     }
 
     const T* data() const { return _data; }
@@ -46,18 +64,28 @@ public:
     int Height() const { return _height; }
     int Depth() const { return sizeof(Tpixel); }
     int Channels() const { return NbChannels<Tpixel>::size; }
+    int StrideBytes() const { return _strideBytes; }
     std::size_t size() const { return _width * _height; }
 
     const T& operator()(int i) const { return _data[i]; }
-    const T& operator()(int y, int x) const { return _data[y * _width + x]; }
-    T& operator()(int i) { return _data[i]; }
-    T& operator()(int y, int x) { return _data[y * _width + x]; }
+    const T& operator()(int y, int x) const
+    {
+        const char* rowPtr = reinterpret_cast<const char*>(_data) + _strideBytes * y;
+        return reinterpret_cast<const T*>(rowPtr)[x];
+    }
 
+    T& operator()(int i) { return _data[i]; }
+    T& operator()(int y, int x)
+    {
+        const char* rowPtr = reinterpret_cast<char*>(_data) + _strideBytes * y;
+        return reinterpret_cast<T*>(rowPtr)[x];
+    }
 
 private:
     T* _data = nullptr;
     int _width = 0;
     int _height = 0;
+    int _strideBytes = 0;
 };
 
 } // namespace image

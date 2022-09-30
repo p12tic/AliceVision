@@ -699,7 +699,8 @@ void writeImage(const std::string& path,
       imageSpec.set_roi_full(roi);
   }
 
-    oiio::ImageBuf outBuf = oiio::ImageBuf(imageSpec, const_cast<T*>(image.data())); // original image buffer
+    oiio::ImageBuf outBuf = oiio::ImageBuf(imageSpec, const_cast<T*>(image.data()),
+                                           oiio::AutoStride, image.StrideBytes());
 
     if (fromColorSpace == toColorSpace)
     {
@@ -823,7 +824,8 @@ void writeImageNoFloat(const std::string& path,
   imageSpec.attribute("jpeg:subsampling", "4:4:4");           // if possible, always subsampling 4:4:4 for jpeg
   imageSpec.attribute("compression", isEXR ? "zips" : "none"); // if possible, set compression (zips for EXR, none for the other)
 
-  oiio::ImageBuf outBuf = oiio::ImageBuf(imageSpec, const_cast<T*>(image.data())); // original image buffer
+  oiio::ImageBuf outBuf = oiio::ImageBuf(imageSpec, const_cast<T*>(image.data()),
+                                         oiio::AutoStride, image.StrideBytes());
 
   if(isEXR)
   {
