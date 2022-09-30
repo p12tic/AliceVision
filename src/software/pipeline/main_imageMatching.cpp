@@ -13,15 +13,14 @@
 #include <aliceVision/system/Logger.hpp>
 #include <aliceVision/system/main.hpp>
 #include <aliceVision/system/cmdline.hpp>
+#include <aliceVision/vfs/filesystem.hpp>
 #include <aliceVision/config.hpp>
 
 #include <Eigen/Core>
 
 #include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
 
 #include <iostream>
-#include <fstream>
 #include <ostream>
 #include <string>
 #include <set>
@@ -37,7 +36,6 @@ using namespace aliceVision::voctree;
 using namespace aliceVision::imageMatching;
 
 namespace po = boost::program_options;
-namespace fs = boost::filesystem;
 
 int aliceVision_main(int argc, char** argv)
 {
@@ -282,11 +280,11 @@ int aliceVision_main(int argc, char** argv)
   }
 
   // check if the output folder exists
-  const auto basePath = fs::path(outputFile).parent_path();
-  if(!basePath.empty() && !fs::exists(basePath))
+  const auto basePath = vfs::path(outputFile).parent_path();
+  if(!basePath.empty() && !vfs::exists(basePath))
   {
     // then create the missing folder
-    if(!fs::create_directories(basePath))
+    if (!vfs::create_directories(basePath))
     {
       ALICEVISION_LOG_ERROR("Unable to create folders: " << basePath);
       return EXIT_FAILURE;
