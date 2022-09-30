@@ -17,7 +17,6 @@
 
 #include <exception>
 #include <iostream>
-#include <fstream>
 
 namespace aliceVision {
 namespace voctree {
