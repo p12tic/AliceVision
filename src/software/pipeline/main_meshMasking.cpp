@@ -15,9 +15,9 @@
 #include <aliceVision/mvsUtils/common.hpp>
 #include <aliceVision/sfmMvsUtils/visibility.hpp>
 #include <aliceVision/camera/cameraUndistortImage.hpp>
+#include <aliceVision/vfs/filesystem.hpp>
 
 #include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
 
 #include <memory>
 
@@ -30,7 +30,6 @@
 using namespace aliceVision;
 
 namespace po = boost::program_options;
-namespace fs = boost::filesystem;
 
 /**
  * @brief Basic cache system to manage masks.
@@ -594,7 +593,7 @@ int main(int argc, char **argv)
     inputMesh.load(inputMeshPath);
 
     // check sfm file
-    if(!sfmFilePath.empty() && !fs::exists(sfmFilePath) && !fs::is_regular_file(sfmFilePath))
+    if (!sfmFilePath.empty() && !vfs::exists(sfmFilePath) && !vfs::is_regular_file(sfmFilePath))
     {
         ALICEVISION_LOG_ERROR("The input sfm file doesn't exist");
         return EXIT_FAILURE;
@@ -615,10 +614,10 @@ int main(int argc, char **argv)
     }
 
     // ensure output folder exists
-    fs::path outputDirectory = fs::path(outputMeshPath).parent_path();
-    if(!outputDirectory.empty() && !fs::exists(outputDirectory))
+    vfs::path outputDirectory = vfs::path(outputMeshPath).parent_path();
+    if (!outputDirectory.empty() && !vfs::exists(outputDirectory))
     {
-        if(!fs::create_directory(outputDirectory))
+        if (!vfs::create_directory(outputDirectory))
         {
             ALICEVISION_LOG_ERROR("Cannot create output folder");
             return EXIT_FAILURE;
