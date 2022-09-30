@@ -9,6 +9,7 @@
 #include "boost_common.hpp"
 #include "generic_filebuf.hpp"
 #include "path.hpp"
+#include "special_data.hpp"
 
 namespace aliceVision {
 namespace vfs {
@@ -31,6 +32,10 @@ public:
 
     virtual std::uintmax_t hard_link_count(error_code& ec) = 0;
     virtual space_info space(error_code& ec) = 0;
+
+    virtual void set_special_data(const path& p, const std::shared_ptr<special_data>& data,
+                                  error_code& ec) = 0;
+    virtual std::shared_ptr<special_data> get_special_data(const path& p, error_code& ec) = 0;
 };
 
 } // namespace vfs

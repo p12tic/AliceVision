@@ -6,6 +6,7 @@
 
 #include "FilesystemTreeInMemory.hpp"
 #include "filesystem.hpp"
+#include "special_data.hpp"
 #include <boost/range/algorithm_ext/erase.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
@@ -30,6 +31,9 @@ struct FsTreeNode {
 
     // valid only if type == file_type::directory_file
     std::unordered_map<std::string, std::shared_ptr<FsTreeNode>> entries;
+
+    // valid only if type == file_type::character_file
+    std::shared_ptr<vfs::special_data> special_data;
 };
 
 class FilesystemTreeInMemoryFileBuf : public generic_filebuf {
@@ -258,6 +262,14 @@ std::shared_ptr<FsTreeNode> createDirectoryNode()
     result->type = file_type::directory_file;
     return result;
 }
+
+std::shared_ptr<FsTreeNode> createSpecialNode()
+{
+    auto result = std::make_shared<FsTreeNode>();
+    result->type = file_type::character_file;
+    return result;
+}
+
 
 std::shared_ptr<FsTreeNode> findTreeNode(std::shared_ptr<FsTreeNode> nodePtr,
                                          const std::vector<std::string>& parts)
@@ -618,6 +630,92 @@ std::uintmax_t FilesystemTreeInMemory::hard_link_count(error_code& ec)
 space_info FilesystemTreeInMemory::space(error_code& ec)
 {
     return space_info{0, 0, 0};
+}
+
+
+void FilesystemTreeInMemory::set_special_data(const path& p,
+                                              const std::shared_ptr<special_data>& data,
+                                              error_code& ec)
+{
+    ec.clear();
+    if (!p.is_absolute())
+    {
+        ec.assign(boost::system::errc::no_such_file_or_directory, boost::system::generic_category());
+        return;
+    }
+
+    auto parts = splitPath(p);
+    if (parts.empty())
+    {
+        ec.assign(boost::system::errc::no_such_file_or_directory, boost::system::generic_category());
+        return;
+    }
+
+    auto dirname = parts.back();
+    parts.pop_back();
+
+    auto directoryNode = findTreeNode(_d->root, parts);
+    if (!directoryNode || directoryNode->type != file_type::directory_file)
+    {
+        ec.assign(boost::system::errc::no_such_file_or_directory, boost::system::generic_category());
+        return;
+    }
+
+    std::lock_guard<std::mutex> lock{directoryNode->mutex};
+    auto it = directoryNode->entries.find(dirname);
+    if (it == directoryNode->entries.end())
+    {
+        auto newNode = createSpecialNode();
+        newNode->special_data = data;
+        directoryNode->entries.emplace(dirname, newNode);
+        return;
+    }
+
+    if (it->second->type != file_type::character_file)
+    {
+        ec.assign(boost::system::errc::file_exists, boost::system::generic_category());
+        return;
+    }
+
+    it->second->special_data = data;
+}
+
+std::shared_ptr<special_data>
+        FilesystemTreeInMemory::get_special_data(const path& p, error_code& ec)
+{
+    ec.clear();
+    if (!p.is_absolute())
+    {
+        ec.assign(boost::system::errc::no_such_file_or_directory, boost::system::generic_category());
+        return nullptr;
+    }
+
+    auto parts = splitPath(p);
+    if (parts.empty())
+    {
+        ec.assign(boost::system::errc::no_such_file_or_directory, boost::system::generic_category());
+        return nullptr;
+    }
+
+    auto dirname = parts.back();
+    parts.pop_back();
+
+    auto directoryNode = findTreeNode(_d->root, parts);
+    if (!directoryNode || directoryNode->type != file_type::directory_file)
+    {
+        ec.assign(boost::system::errc::no_such_file_or_directory, boost::system::generic_category());
+        return nullptr;
+    }
+
+    std::lock_guard<std::mutex> lock{directoryNode->mutex};
+    auto it = directoryNode->entries.find(dirname);
+    if (it == directoryNode->entries.end() || it->second->type != file_type::character_file)
+    {
+        ec.assign(boost::system::errc::no_such_file_or_directory, boost::system::generic_category());
+        return nullptr;
+    }
+
+    return it->second->special_data;
 }
 
 } // namespace vfs

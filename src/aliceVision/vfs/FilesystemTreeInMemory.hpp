@@ -32,6 +32,9 @@ public:
     std::uintmax_t hard_link_count(error_code& ec) override;
     space_info space(error_code& ec) override;
 
+    void set_special_data(const path& p, const std::shared_ptr<special_data>& data,
+                          error_code& ec) override;
+    std::shared_ptr<special_data> get_special_data(const path& p, error_code& ec) override;
 private:
     struct Data;
     std::unique_ptr<Data> _d;

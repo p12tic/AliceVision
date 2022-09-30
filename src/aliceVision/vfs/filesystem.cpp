@@ -929,5 +929,50 @@ path weakly_canonical(const path& p, error_code& ec)
     return tree->weakly_canonical(p, ec);
 }
 
+void set_special_data(const path& p, const std::shared_ptr<special_data>& data)
+{
+    error_code ec;
+    set_special_data(p, data, ec);
+    throwIfFailedEc(ec, "set_special_data", p);
+}
+
+void set_special_data(const path& p, const std::shared_ptr<special_data>& data, error_code& ec)
+{
+    auto* tree = getTreeForPathMaybeRelative(p, current_path());
+    if (!tree)
+    {
+        ec.assign(boost::system::errc::no_such_file_or_directory, boost::system::generic_category());
+        return;
+    }
+
+    tree->set_special_data(p, data, ec);
+}
+
+std::shared_ptr<special_data> get_special_data(const path& p)
+{
+    error_code ec;
+    auto result = get_special_data(p, ec);
+    throwIfFailedEc(ec, "get_special_data", p);
+    return result;
+}
+
+std::shared_ptr<special_data> get_special_data_if_exists(const path& p)
+{
+    error_code ec;
+    return get_special_data(p, ec);
+}
+
+std::shared_ptr<special_data> get_special_data(const path& p, error_code& ec)
+{
+    auto* tree = getTreeForPathMaybeRelative(p, current_path());
+    if (!tree)
+    {
+        ec.assign(boost::system::errc::no_such_file_or_directory, boost::system::generic_category());
+        return nullptr;
+    }
+
+    return tree->get_special_data(p, ec);
+}
+
 } //namespace vfs
 } //namespace aliceVision

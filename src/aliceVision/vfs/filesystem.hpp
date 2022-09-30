@@ -10,6 +10,7 @@
 #include "path.hpp"
 #include "directory_iterator.hpp"
 #include "generic_filebuf.hpp"
+#include "special_data.hpp"
 
 namespace aliceVision {
 namespace vfs {
@@ -143,6 +144,12 @@ path unique_path(const path& model, error_code& ec);
 
 path weakly_canonical(const path& p);
 path weakly_canonical(const path& p, error_code& ec);
+
+void set_special_data(const path& p, const std::shared_ptr<special_data>& data);
+void set_special_data(const path& p, const std::shared_ptr<special_data>& data, error_code& ec);
+std::shared_ptr<special_data> get_special_data(const path& p); // throws
+std::shared_ptr<special_data> get_special_data_if_exists(const path& p); // does not throw
+std::shared_ptr<special_data> get_special_data(const path& p, error_code& ec);
 
 } //namespace vfs
 } //namespace aliceVision

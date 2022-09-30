@@ -13,6 +13,7 @@ set(vfs_files_headers
     null_streambuf.hpp
     ostream.hpp
     path.hpp
+    special_data.hpp
     std_filebuf.hpp
 )
 
@@ -27,6 +28,7 @@ set(vfs_files_sources
     istream.cpp
     ostream.cpp
     path.cpp
+    special_data.cpp
     std_filebuf.cpp
 )
 
