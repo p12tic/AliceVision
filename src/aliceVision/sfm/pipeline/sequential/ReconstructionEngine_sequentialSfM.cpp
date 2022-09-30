@@ -31,6 +31,8 @@
 #include <aliceVision/system/MemoryInfo.hpp>
 #include <aliceVision/track/TracksBuilder.hpp>
 #include <aliceVision/track/tracksUtils.hpp>
+#include <aliceVision/vfs/filesystem.hpp>
+#include <aliceVision/vfs/ostream.hpp>
 
 #include <dependencies/htmlDoc/htmlDoc.hpp>
 
@@ -135,7 +137,7 @@ ReconstructionEngine_sequentialSfM::ReconstructionEngine_sequentialSfM(
   : ReconstructionEngine(sfmData, outputFolder),
     _params(params),
     _htmlLogFile(loggingFile),
-    _sfmStepFolder((fs::path(outputFolder) / "intermediate_steps").string())
+    _sfmStepFolder((vfs::path(outputFolder) / "intermediate_steps").string())
 {
   if (_params.useLocalBundleAdjustment)
   {
@@ -155,8 +157,8 @@ ReconstructionEngine_sequentialSfM::ReconstructionEngine_sequentialSfM(
   }
 
   // create sfm intermediate step folder
-  if(!fs::exists(_sfmStepFolder))
-    fs::create_directory(_sfmStepFolder);
+  if(!vfs::exists(_sfmStepFolder))
+    vfs::create_directory(_sfmStepFolder);
 }
 
 bool ReconstructionEngine_sequentialSfM::process()
@@ -470,7 +472,7 @@ double ReconstructionEngine_sequentialSfM::incrementalReconstruction()
         auto chrono_start = std::chrono::steady_clock::now();
         std::ostringstream os;
         os << "sfm_" << std::setw(8) << std::setfill('0') << resectionId;
-        sfmDataIO::Save(_sfmData, (fs::path(_sfmStepFolder) / (os.str() + _params.sfmStepFileExtension)).string(), _params.sfmStepFilter);
+        sfmDataIO::Save(_sfmData, (vfs::path(_sfmStepFolder) / (os.str() + _params.sfmStepFileExtension)).string(), _params.sfmStepFilter);
         ALICEVISION_LOG_DEBUG("Save of file " << os.str() << " took " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - chrono_start).count() << " msec.");
       }
 
@@ -813,7 +815,7 @@ void ReconstructionEngine_sequentialSfM::exportStatistics(double reconstructionT
     _htmlDocStream->pushXYChart(xBinTracks, observationsLengthHistogram.GetHist(),"3DtoTracksSize");
 
     // save the reconstruction Log
-    std::ofstream htmlFileStream(_htmlLogFile.c_str());
+    vfs::ostream htmlFileStream(_htmlLogFile.c_str());
     htmlFileStream << _htmlDocStream->getDoc();
   }
 
@@ -846,7 +848,8 @@ void ReconstructionEngine_sequentialSfM::exportStatistics(double reconstructionT
     _jsonLogTree.put("hardware.ram.size", system::getMemoryInfo().totalRam); // ram size
 
     // write json on disk
-    pt::write_json((fs::path(_outputFolder) / "stats.json").string(), _jsonLogTree);
+    vfs::ostream jsonStream{(vfs::path(_outputFolder) / "stats.json").string()};
+    pt::write_json(jsonStream, _jsonLogTree);
   }
 
   // (optional) export the intrinsics history values to a csv file.
@@ -1205,7 +1208,7 @@ bool ReconstructionEngine_sequentialSfM::makeInitialPair3D(const Pair& currentPa
       _htmlDocStream->pushInfo(jsxGraph.toStr());
       _htmlDocStream->pushInfo("<hr>");
 
-      std::ofstream htmlFileStream((fs::path(_outputFolder) / _htmlLogFile).string());
+      vfs::ostream htmlFileStream((vfs::path(_outputFolder) / _htmlLogFile).string());
       htmlFileStream << _htmlDocStream->getDoc();
     }
   }
