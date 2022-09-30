@@ -3,7 +3,7 @@
 
 # Add library function
 function(alicevision_add_library library_name)
-  set(options USE_CUDA)
+  set(options USE_CUDA ENABLE_ASAN ENABLE_ASAN_WITH_DEPS)
   set(singleValues "")
   set(multipleValues SOURCES PUBLIC_LINKS PRIVATE_LINKS PUBLIC_INCLUDE_DIRS PRIVATE_INCLUDE_DIRS PUBLIC_DEFINITIONS PRIVATE_DEFINITIONS)
 
@@ -50,6 +50,19 @@ function(alicevision_add_library library_name)
     target_link_libraries(${library_name}
        ${LIBRARY_PUBLIC_LINKS}
        ${LIBRARY_PRIVATE_LINKS}
+    )
+  endif()
+
+  if(LIBRARY_ENABLE_ASAN)
+    target_compile_options(${library_name} PRIVATE -fsanitize=undefined -fsanitize=address)
+    target_link_libraries(${library_name}
+      PRIVATE -fsanitize=undefined -fsanitize=address asan
+    )
+  endif()
+  if(LIBRARY_ENABLE_ASAN_WITH_DEPS)
+    target_compile_options(${library_name} PUBLIC -fsanitize=undefined -fsanitize=address)
+    target_link_libraries(${library_name}
+      PUBLIC -fsanitize=undefined -fsanitize=address asan
     )
   endif()
 
