@@ -15,7 +15,6 @@
 #include <aliceVision/mvsUtils/ImagesCache.hpp>
 #include <aliceVision/image/io.hpp>
 
-#include <fstream>
 #include <string>
 
 #include <OpenImageIO/paramlist.h>
