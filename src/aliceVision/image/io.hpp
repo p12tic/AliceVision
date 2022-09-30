@@ -8,6 +8,7 @@
 #pragma once
 
 #include <aliceVision/image/Image.hpp>
+#include <aliceVision/image/ImageSpan.hpp>
 #include <aliceVision/image/pixelTypes.hpp>
 #include <aliceVision/types.hpp>
 
@@ -324,34 +325,39 @@ void readImageDirect(const std::string& path, Image<unsigned char>& image);
  * @param[in] path The given path to the image
  * @param[in] image The output image buffer
  */
-void writeImage(const std::string& path, const Image<unsigned char>& image,
+void writeImage(const std::string& path, const ImageSpan<unsigned char>& image,
                 const ImageWriteOptions& options,
                 const oiio::ParamValueList& metadata = oiio::ParamValueList());
 
-void writeImage(const std::string& path, const Image<int>& image,
+void writeImage(const std::string& path, const ImageSpan<int>& image,
                 const ImageWriteOptions& options,
                 const oiio::ParamValueList& metadata = oiio::ParamValueList());
 
-void writeImage(const std::string& path, const Image<IndexT>& image,
+void writeImage(const std::string& path, const ImageSpan<IndexT>& image,
                 const ImageWriteOptions& options,
                 const oiio::ParamValueList& metadata = oiio::ParamValueList());
 
-void writeImage(const std::string& path, const Image<float>& image, const ImageWriteOptions& options,
+void writeImage(const std::string& path, const ImageSpan<float>& image,
+                const ImageWriteOptions& options,
                 const oiio::ParamValueList& metadata = oiio::ParamValueList(),
                 const oiio::ROI& roi = oiio::ROI());
 
-void writeImage(const std::string& path, const Image<RGBAfColor>& image, const ImageWriteOptions& options,
+void writeImage(const std::string& path, const ImageSpan<RGBAfColor>& image,
+                const ImageWriteOptions& options,
                 const oiio::ParamValueList& metadata = oiio::ParamValueList(),
                 const oiio::ROI& roi = oiio::ROI());
 
-void writeImage(const std::string& path, const Image<RGBAColor>& image, const ImageWriteOptions& options,
+void writeImage(const std::string& path, const ImageSpan<RGBAColor>& image,
+                const ImageWriteOptions& options,
                 const oiio::ParamValueList& metadata = oiio::ParamValueList());
 
-void writeImage(const std::string& path, const Image<RGBfColor>& image, const ImageWriteOptions& options,
+void writeImage(const std::string& path, const ImageSpan<RGBfColor>& image,
+                const ImageWriteOptions& options,
                 const oiio::ParamValueList& metadata = oiio::ParamValueList(),
                 const oiio::ROI& roi = oiio::ROI());
 
-void writeImage(const std::string& path, const Image<RGBColor>& image, const ImageWriteOptions& options,
+void writeImage(const std::string& path, const ImageSpan<RGBColor>& image,
+                const ImageWriteOptions& options,
                 const oiio::ParamValueList& metadata = oiio::ParamValueList());
 
 /**
@@ -360,15 +366,15 @@ void writeImage(const std::string& path, const Image<RGBColor>& image, const Ima
  * @param[in] path The given path to the image
  * @param[in] image The output image buffer
  */
-void writeImageWithFloat(const std::string& path, const Image<unsigned char>& image,
+void writeImageWithFloat(const std::string& path, const ImageSpan<unsigned char>& image,
                          const ImageWriteOptions& options,
                          const oiio::ParamValueList& metadata = oiio::ParamValueList());
 
-void writeImageWithFloat(const std::string& path, const Image<int>& image,
+void writeImageWithFloat(const std::string& path, const ImageSpan<int>& image,
                          const ImageWriteOptions& options,
                          const oiio::ParamValueList& metadata = oiio::ParamValueList());
 
-void writeImageWithFloat(const std::string& path, const Image<IndexT>& image,
+void writeImageWithFloat(const std::string& path, const ImageSpan<IndexT>& image,
                          const ImageWriteOptions& options,
                          const oiio::ParamValueList& metadata = oiio::ParamValueList());
 
