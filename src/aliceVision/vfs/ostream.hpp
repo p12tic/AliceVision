@@ -7,6 +7,7 @@
 #pragma once
 
 #include "path.hpp"
+#include "generic_filebuf.hpp"
 #include "null_streambuf.hpp"
 #include <cstdarg>
 #include <ostream>
@@ -129,13 +130,8 @@ public:
 
 private:
     friend class filesystem;
-    ostream(std::unique_ptr<std::filebuf>&& buffer) :
-        std::ostream{buffer.get()},
-        _buffer{std::move(buffer)}
-    {
-    }
 
-    std::unique_ptr<std::filebuf> _buffer;
+    std::unique_ptr<generic_filebuf> _buffer;
 
     // We need to set the buffer to something in constructor so that the state of the stream
     // is good until open() is called, or a input operation is performed (which will fail)
