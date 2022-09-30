@@ -5,6 +5,7 @@ set(vfs_files_headers
     directory_iterator.hpp
     IFilesystemTree.hpp
     filesystem.hpp
+    FilesystemImplUtils.hpp
     FilesystemManager.hpp
     FilesystemTreeInMemory.hpp
     generic_filebuf.hpp
