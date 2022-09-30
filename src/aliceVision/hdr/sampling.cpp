@@ -8,6 +8,7 @@
 
 #include <aliceVision/alicevision_omp.hpp>
 #include <aliceVision/system/Logger.hpp>
+#include <aliceVision/system/ParallelFor.hpp>
 
 #include <OpenImageIO/imagebufalgo.h>
 #include <random>
@@ -188,8 +189,7 @@ bool Sampling::extractSamplesFromImages(std::vector<ImageSample>& out_samples, c
             throw std::runtime_error(ss.str());
         }
 
-        #pragma omp parallel for
-        for (int idx = 0; idx < vec_blocks.size(); ++idx)
+        system::parallelFor<int>(0, vec_blocks.size(), [&](int idx)
         {
             int cx = vec_blocks[idx].first;
             int cy = vec_blocks[idx].second;
@@ -230,7 +230,7 @@ bool Sampling::extractSamplesFromImages(std::vector<ImageSample>& out_samples, c
                     blockOutput(y, x).descriptions.push_back(pd);
                 }
             }
-        }
+        });
     }
 
     if (samples.Width() == 0)
@@ -240,8 +240,7 @@ bool Sampling::extractSamplesFromImages(std::vector<ImageSample>& out_samples, c
     }
 
     // Create samples image
-    #pragma omp parallel for
-    for (int y = params.radius; y < samples.Height() - params.radius; ++y)
+    system::parallelFor(params.radius, samples.Height() - params.radius, [&](int y)
     {
         for (int x = params.radius; x < samples.Width() - params.radius; ++x)
         {
@@ -359,7 +358,7 @@ bool Sampling::extractSamplesFromImages(std::vector<ImageSample>& out_samples, c
                 sample.descriptions = replace;
             }
         }
-    }
+    });
 
     // Get a counter for all unique descriptors
     using Coordinates = std::pair<int, int>;
@@ -368,13 +367,12 @@ bool Sampling::extractSamplesFromImages(std::vector<ImageSample>& out_samples, c
 
     Counters counters;
     {
-        std::vector<Counters> counters_vec(omp_get_max_threads());
+        std::vector<Counters> counters_vec(system::getMaxParallelThreadCount());
 
-        #pragma omp parallel for
-        for (int y = params.radius; y < samples.Height() - params.radius; ++y)
+        system::parallelForWithPerThreadData(params.radius, samples.Height() - params.radius,
+                                             counters_vec, system::ParallelSettings(),
+                                             [&](int y, Counters& counters_thread)
         {
-            Counters & counters_thread = counters_vec[omp_get_thread_num()];
-
             for (int x = params.radius; x < samples.Width() - params.radius; ++x)
             {
                 const ImageSample & sample = samples(y, x);
@@ -398,7 +396,7 @@ bool Sampling::extractSamplesFromImages(std::vector<ImageSample>& out_samples, c
                     }
                 }
             }
-        }
+        });
 
         for(int i = 0; i < counters_vec.size(); ++i)
         {
