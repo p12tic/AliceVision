@@ -26,12 +26,12 @@ path absolute(const path& p, const path& base)
 
 path canonical(const path& p)
 {
-    return boost::filesystem::canonical(p.boost_path());
+    return canonical(p, current_path());
 }
 
 path canonical(const path& p, error_code& ec)
 {
-    return boost::filesystem::canonical(p.boost_path(), ec);
+    return canonical(p, current_path(), ec);
 }
 
 path canonical(const path& p, const path& base)
