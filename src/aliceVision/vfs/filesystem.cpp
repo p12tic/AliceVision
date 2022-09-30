@@ -5,11 +5,30 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "filesystem.hpp"
+#include "FilesystemManager.hpp"
+#include "generic_filebuf.hpp"
+#include "std_filebuf.hpp"
 
 namespace aliceVision {
 namespace vfs {
 
 namespace {
+
+IFilesystemTree* getTreeForPathAbsolute(const path& p)
+{
+    return getManager().getTreeAtRootIfExists(p.boost_path().root_name());
+}
+
+// base must be absolute path
+IFilesystemTree* getTreeForPathMaybeRelative(const path& p, const path& base)
+{
+    return getTreeForPathAbsolute(p.is_absolute() ? p : base);
+}
+
+IFilesystemTree* getCurrentPathTree()
+{
+    return getManager().getCurrentPathTree();
+}
 
 void throwIfFailedEc(error_code ec, const char* msg)
 {
@@ -35,20 +54,42 @@ void throwIfFailedEc(error_code ec, const char* msg, const path& path1, const pa
     }
 }
 
+std::unique_ptr<generic_filebuf> openFile(IFilesystemTree* tree, const path& path,
+                                          std::ios_base::openmode mode)
+{
+    if (tree)
+        return tree->open(path, mode);
+    return std::make_unique<std_filebuf>(path.string(), mode);
+}
+
 } // namespace
+
+
+std::unique_ptr<generic_filebuf> open_file(const path& path, std::ios_base::openmode mode)
+{
+    auto cwd = current_path();
+    return openFile(getTreeForPathMaybeRelative(path, cwd), path, mode);
+}
 
 bool is_virtual_path(const path& p)
 {
-    return false;
+    if (p.is_absolute())
+    {
+        return getTreeForPathAbsolute(p) != nullptr;
+    }
+
+    return getCurrentPathTree() != nullptr;
 }
 
 path absolute(const path& p)
 {
-    return boost::filesystem::absolute(p.boost_path());
+    return absolute(p, current_path());
 }
 
 path absolute(const path& p, const path& base)
 {
+    // This function does not access the filesystem, so can be used without checking for existing
+    // virtual file systems.
     return boost::filesystem::absolute(p.boost_path(), base.boost_path());
 }
 
@@ -72,7 +113,12 @@ path canonical(const path& p, const path& base)
 
 path canonical(const path& p, const path& base, error_code& ec)
 {
-    return boost::filesystem::canonical(p.boost_path(), base.boost_path(), ec);
+    auto* tree = getTreeForPathMaybeRelative(p, base);
+    if (!tree)
+    {
+        return boost::filesystem::canonical(p.boost_path(), base.boost_path(), ec);
+    }
+    return tree->canonical(p, base, ec);
 }
 
 void copy(const path& from, const path& to)
@@ -84,7 +130,15 @@ void copy(const path& from, const path& to)
 
 void copy(const path& from, const path& to, error_code& ec)
 {
-    boost::filesystem::copy(from.boost_path(), to.boost_path(), ec);
+    auto* treeFrom = getTreeForPathMaybeRelative(from, current_path());
+    auto* treeTo = getTreeForPathMaybeRelative(to, current_path());
+    if (!treeFrom && !treeTo)
+    {
+        boost::filesystem::copy(from.boost_path(), to.boost_path(), ec);
+        return;
+    }
+
+    throw std::invalid_argument("copy not supported yet");
 }
 
 void copy_directory(const path& from, const path& to)
@@ -96,7 +150,18 @@ void copy_directory(const path& from, const path& to)
 
 void copy_directory(const path& from, const path& to, error_code& ec)
 {
-    boost::filesystem::copy_directory(from.boost_path(), to.boost_path(), ec);
+    auto* treeFrom = getTreeForPathMaybeRelative(from, current_path());
+    auto* treeTo = getTreeForPathMaybeRelative(to, current_path());
+    if (!treeFrom && !treeTo)
+    {
+        boost::filesystem::copy_directory(from.boost_path(), to.boost_path(), ec);
+        return;
+    }
+
+    // copy_directory is poorly named function that performs directory creation with the attributes
+    // of the source directory. Virtual filesystem does not support attributes, so just create
+    // a directory as usual.
+    create_directory(to, ec);
 }
 
 void copy_file(const path& from, const path& to)
@@ -108,7 +173,7 @@ void copy_file(const path& from, const path& to)
 
 void copy_file(const path& from, const path& to, error_code& ec)
 {
-    boost::filesystem::copy_file(from.boost_path(), to.boost_path(), ec);
+    copy_file(from, to, copy_options::none, ec);
 }
 
 void copy_file(const path& from, const path& to, copy_options option)
@@ -120,8 +185,67 @@ void copy_file(const path& from, const path& to, copy_options option)
 
 void copy_file(const path& from, const path& to, copy_options options, error_code& ec)
 {
-    boost::filesystem::copy_file(from.boost_path(), to.boost_path(),
-                                 boost::native_value(options), ec);
+    ec.clear();
+    auto* treeFrom = getTreeForPathMaybeRelative(from, current_path());
+    auto* treeTo = getTreeForPathMaybeRelative(to, current_path());
+    if (!treeFrom && !treeTo)
+    {
+        boost::filesystem::copy_file(from.boost_path(), to.boost_path(),
+                                     boost::native_value(options), ec);
+        return;
+    }
+
+    auto optionCount = 0;
+    optionCount += (options & copy_options::overwrite_existing) != copy_options::none;
+    optionCount += (options & copy_options::skip_existing) != copy_options::none;
+    optionCount += (options & copy_options::update_existing) != copy_options::none;
+    if (optionCount > 1)
+    {
+        throw std::invalid_argument("Invalid options to copy_file");
+    }
+
+    if (!vfs::is_regular_file(from, ec))
+    {
+        ec.assign(boost::system::errc::function_not_supported, boost::system::generic_category());
+        return;
+    }
+    ec.clear();
+
+    if (vfs::is_regular_file(to, ec))
+    {
+        ec.clear();
+        if ((options & copy_options::skip_existing) != copy_options::none)
+        {
+            return;
+        }
+    }
+
+    auto fromFile = openFile(treeFrom, from, std::ios_base::in);
+    auto toFile = openFile(treeTo, to, std::ios_base::out);
+
+    if (!fromFile->is_open() || !toFile->is_open())
+    {
+        ec.assign(boost::system::errc::no_such_file_or_directory, boost::system::generic_category());
+        return;
+    }
+
+    std::size_t bufferSize = 1024 * 128;
+    std::vector<char> buffer(bufferSize);
+
+    while (true)
+    {
+        std::size_t readSize = fromFile->sgetn(buffer.data(), buffer.size());
+        if (readSize == 0)
+            break;
+
+        std::size_t writeSize = toFile->sputn(buffer.data(), readSize);
+        if (writeSize < readSize)
+        {
+            // FIXME: error code could be better
+            ec.assign(boost::system::errc::file_too_large, boost::system::generic_category());
+            return;
+        }
+    }
 }
 
 void copy_symlink(const path& existing_symlink, const path& new_symlink)
@@ -133,7 +257,20 @@ void copy_symlink(const path& existing_symlink, const path& new_symlink)
 
 void copy_symlink(const path& existing_symlink, const path& new_symlink, error_code& ec)
 {
-    boost::filesystem::copy_symlink(existing_symlink.boost_path(), new_symlink.boost_path(), ec);
+    auto* treeExisting = getTreeForPathMaybeRelative(existing_symlink, current_path());
+    auto* treeNew = getTreeForPathMaybeRelative(new_symlink, current_path());
+    if (!treeExisting && !treeNew)
+    {
+        boost::filesystem::copy_symlink(existing_symlink.boost_path(), new_symlink.boost_path(), ec);
+        return;
+    }
+    if (treeExisting != treeNew)
+    {
+        ec.assign(static_cast<int>(std::errc::cross_device_link),
+                  boost::system::generic_category());
+    }
+
+    throw std::invalid_argument("copy_symlink not supported yet");
 }
 
 bool create_directories(const path& p)
@@ -146,7 +283,52 @@ bool create_directories(const path& p)
 
 bool create_directories(const path& p, error_code& ec)
 {
-    return boost::filesystem::create_directories(p.boost_path(), ec);
+    auto* tree = getTreeForPathMaybeRelative(p, current_path());
+    if (!tree)
+    {
+        return boost::filesystem::create_directories(p.boost_path(), ec);
+    }
+
+    if (p.empty())
+    {
+        ec.assign(boost::system::errc::invalid_argument, boost::system::generic_category());
+        return false;
+    }
+
+    if (p.filename_is_dot() || p.filename_is_dot_dot())
+        return create_directories(p.parent_path(), ec);
+
+    auto stat = status(p, ec);
+    if (stat.type() == file_type::directory_file)
+    {
+        // already exists
+        ec.clear();
+        return false;
+    }
+
+    if (stat.type() == file_type::status_error)
+    {
+        // ec already contains error code
+        return false;
+    }
+
+    path parentPath = p.parent_path();
+    if (parentPath == p)
+    {
+        throw std::runtime_error("Recursion in create_directories()");
+    }
+    auto parentStatus = status(parentPath, ec);
+
+    if (parentStatus.type() == file_type::file_not_found)
+    {
+        create_directories(parentPath, ec);
+        if (ec)
+        {
+            return false;
+        }
+    }
+
+    return create_directory(p, ec);
 }
 
 bool create_directory(const path& p)
@@ -159,7 +341,14 @@ bool create_directory(const path& p)
 
 bool create_directory(const path& p, error_code& ec)
 {
-    return boost::filesystem::create_directory(p.boost_path(), ec);
+    auto cwd = current_path();
+    auto* tree = getTreeForPathMaybeRelative(p, cwd);
+    if (!tree)
+    {
+        return boost::filesystem::create_directory(p.boost_path(), ec);
+    }
+
+    return tree->create_directory(absolute(p, cwd), ec);
 }
 
 void create_directory_symlink(const path& to, const path& new_symlink)
@@ -171,7 +360,20 @@ void create_directory_symlink(const path& to, const path& new_symlink)
 
 void create_directory_symlink(const path& to, const path& new_symlink, error_code& ec)
 {
-    boost::filesystem::create_directory_symlink(to.boost_path(), new_symlink.boost_path(), ec);
+    auto* treeTo = getTreeForPathMaybeRelative(to, current_path());
+    auto* treeNew = getTreeForPathMaybeRelative(new_symlink, current_path());
+    if (!treeTo && !treeNew)
+    {
+        boost::filesystem::create_directory_symlink(to.boost_path(), new_symlink.boost_path(), ec);
+        return;
+    }
+    if (treeTo != treeNew)
+    {
+        ec.assign(static_cast<int>(std::errc::cross_device_link),
+                  boost::system::generic_category());
+    }
+
+    throw std::invalid_argument("create_directory_symlink not supported yet");
 }
 
 void create_hard_link(const path& to, const path& new_hard_link)
@@ -183,7 +385,20 @@ void create_hard_link(const path& to, const path& new_hard_link)
 
 void create_hard_link(const path& to, const path& new_hard_link, error_code& ec)
 {
-    boost::filesystem::create_hard_link(to.boost_path(), new_hard_link.boost_path(), ec);
+    auto* treeTo = getTreeForPathMaybeRelative(to, current_path());
+    auto* treeNew = getTreeForPathMaybeRelative(new_hard_link, current_path());
+    if (!treeTo && !treeNew)
+    {
+        boost::filesystem::create_hard_link(to.boost_path(), new_hard_link.boost_path(), ec);
+        return;
+    }
+    if (treeTo != treeNew)
+    {
+        ec.assign(static_cast<int>(std::errc::cross_device_link),
+                  boost::system::generic_category());
+    }
+
+    throw std::invalid_argument("create_hard_link not supported yet");
 }
 
 void create_symlink(const path& to, const path& new_symlink)
@@ -195,7 +410,20 @@ void create_symlink(const path& to, const path& new_symlink)
 
 void create_symlink(const path& to, const path& new_symlink, error_code& ec)
 {
-    boost::filesystem::create_symlink(to.boost_path(), new_symlink.boost_path(), ec);
+    auto* treeTo = getTreeForPathMaybeRelative(to, current_path());
+    auto* treeNew = getTreeForPathMaybeRelative(new_symlink, current_path());
+    if (!treeTo && !treeNew)
+    {
+        boost::filesystem::create_symlink(to.boost_path(), new_symlink.boost_path(), ec);
+        return;
+    }
+    if (treeTo != treeNew)
+    {
+        ec.assign(static_cast<int>(std::errc::cross_device_link),
+                  boost::system::generic_category());
+    }
+
+    throw std::invalid_argument("create_symlink not supported yet");
 }
 
 path current_path()
@@ -208,7 +436,10 @@ path current_path()
 
 path current_path(error_code& ec)
 {
-    return boost::filesystem::current_path(ec);
+    auto currentVirtualPath = getManager().getCurrentPath();
+    if (currentVirtualPath.empty())
+        return boost::filesystem::current_path(ec);
+    return currentVirtualPath;
 }
 
 void current_path(const path& p)
@@ -220,6 +451,24 @@ void current_path(const path& p)
 
 void current_path(const path& p, error_code& ec)
 {
+    if (p.is_absolute())
+    {
+        if (getTreeForPathAbsolute(p))
+        {
+            // absolute path rooted
+            getManager().setCurrentPath(p.boost_path());
+            return;
+        }
+        boost::filesystem::current_path(p.boost_path(), ec);
+        return;
+    }
+
+    if (getManager().getCurrentPathTree())
+    {
+        getManager().setCurrentPath(p.boost_path());
+        return;
+    }
+
     boost::filesystem::current_path(p.boost_path(), ec);
 }
 
@@ -261,7 +510,13 @@ std::uintmax_t file_size(const path& p)
 
 std::uintmax_t file_size(const path& p, error_code& ec)
 {
-    return boost::filesystem::file_size(p.boost_path(), ec);
+    auto* tree = getTreeForPathMaybeRelative(p, current_path());
+    if (!tree)
+    {
+        return boost::filesystem::file_size(p.boost_path(), ec);
+    }
+
+    return tree->file_size(p, ec);
 }
 
 std::uintmax_t hard_link_count(const path& p)
@@ -274,7 +529,12 @@ std::uintmax_t hard_link_count(const path& p)
 
 std::uintmax_t hard_link_count(const path& p, error_code& ec)
 {
-    return boost::filesystem::hard_link_count(p.boost_path(), ec);
+    auto* tree = getTreeForPathMaybeRelative(p, current_path());
+    if (!tree)
+    {
+        return boost::filesystem::hard_link_count(p.boost_path(), ec);
+    }
+    return tree->hard_link_count(ec);
 }
 
 bool is_directory(file_status s) noexcept
@@ -302,7 +562,13 @@ bool is_empty(const path& p)
 
 bool is_empty(const path& p, error_code& ec)
 {
-    return boost::filesystem::is_empty(p.boost_path(), ec);
+    auto* tree = getTreeForPathMaybeRelative(p, current_path());
+    if (!tree)
+    {
+        return boost::filesystem::is_empty(p.boost_path(), ec);
+    }
+
+    throw std::invalid_argument("is_empty not supported yet");
 }
 
 bool is_other(file_status s) noexcept
@@ -360,7 +626,13 @@ std::time_t last_write_time(const path& p)
 
 std::time_t last_write_time(const path& p, error_code& ec)
 {
-    return boost::filesystem::last_write_time(p.boost_path(), ec);
+    auto* tree = getTreeForPathMaybeRelative(p, current_path());
+    if (!tree)
+    {
+        return boost::filesystem::last_write_time(p.boost_path(), ec);
+    }
+
+    throw std::invalid_argument("last_write_time not supported yet");
 }
 
 void last_write_time(const path& p, const std::time_t new_time)
@@ -372,7 +644,13 @@ void last_write_time(const path& p, const std::time_t new_time)
 
 void last_write_time(const path& p, const std::time_t new_time, error_code& ec)
 {
-    boost::filesystem::last_write_time(p.boost_path(), new_time, ec);
+    auto* tree = getTreeForPathMaybeRelative(p, current_path());
+    if (!tree)
+    {
+        boost::filesystem::last_write_time(p.boost_path(), new_time, ec);
+    }
+
+    throw std::invalid_argument("last_write_time not supported yet");
 }
 
 path read_symlink(const path& p)
@@ -385,7 +663,13 @@ path read_symlink(const path& p)
 
 path read_symlink(const path& p, error_code& ec)
 {
-    return boost::filesystem::read_symlink(p.boost_path(), ec);
+    auto* tree = getTreeForPathMaybeRelative(p, current_path());
+    if (!tree)
+    {
+        return boost::filesystem::read_symlink(p.boost_path(), ec);
+    }
+
+    throw std::invalid_argument("read_symlink not supported yet");
 }
 
 path relative(const path& p)
@@ -411,7 +695,16 @@ path relative(const path& p, const path& base)
 
 path relative(const path& p, const path& base, error_code& ec)
 {
-    return boost::filesystem::relative(p.boost_path(), base.boost_path(), ec);
+    // This function is defined by the documentation exactly, there's no point in calling boost.
+    path canonicalP = weakly_canonical(p, ec);
+    if (ec)
+        return {};
+
+    path canonicalBase = weakly_canonical(base, ec);
+    if (ec)
+        return {};
+
+    return canonicalP.lexically_relative(canonicalBase);
 }
 
 bool remove(const path& p)
@@ -424,7 +717,13 @@ bool remove(const path& p)
 
 bool remove(const path& p, error_code& ec)
 {
-    return boost::filesystem::remove(p.boost_path(), ec);
+    auto* tree = getTreeForPathMaybeRelative(p, current_path());
+    if (!tree)
+    {
+        return boost::filesystem::remove(p.boost_path(), ec);
+    }
+
+    return tree->remove(absolute(p, current_path()), ec);
 }
 
 std::uintmax_t remove_all(const path& p)
@@ -437,7 +736,13 @@ std::uintmax_t remove_all(const path& p)
 
 std::uintmax_t remove_all(const path& p, error_code& ec)
 {
-    return boost::filesystem::remove_all(p.boost_path(), ec);
+    auto* tree = getTreeForPathMaybeRelative(p, current_path());
+    if (!tree)
+    {
+        return boost::filesystem::remove_all(p.boost_path(), ec);
+    }
+
+    return tree->remove_all(p, ec);
 }
 
 void rename(const path& from, const path& to)
@@ -449,7 +754,24 @@ void rename(const path& from, const path& to)
 
 void rename(const path& from, const path& to, error_code& ec)
 {
-    boost::filesystem::rename(from.boost_path(), to.boost_path(), ec);
+    auto cwd = current_path();
+    auto* treeFrom = getTreeForPathMaybeRelative(from, cwd);
+    auto* treeTo = getTreeForPathMaybeRelative(to, cwd);
+    if (!treeFrom && !treeTo)
+    {
+        boost::filesystem::rename(from.boost_path(), to.boost_path(), ec);
+        return;
+    }
+    if (treeFrom != treeTo)
+    {
+        copy_file(from, to, ec);
+        if (ec)
+            return;
+        remove(from, ec);
+        return;
+    }
+
+    treeFrom->rename(absolute(from, cwd), absolute(to, cwd), ec);
 }
 
 void resize_file(const path& p, std::uintmax_t size)
@@ -461,7 +783,13 @@ void resize_file(const path& p, std::uintmax_t size)
 
 void resize_file(const path& p, std::uintmax_t size, error_code& ec)
 {
-    boost::filesystem::resize_file(p.boost_path(), size, ec);
+    auto* tree = getTreeForPathMaybeRelative(p, current_path());
+    if (!tree)
+    {
+        boost::filesystem::resize_file(p.boost_path(), size, ec);
+    }
+
+    throw std::invalid_argument("resize_file not supported yet");
 }
 
 space_info space(const path& p)
@@ -474,20 +802,37 @@ space_info space(const path& p)
 
 space_info space(const path& p, error_code& ec)
 {
-    return boost::filesystem::space(p.boost_path(), ec);
+    auto* tree = getTreeForPathMaybeRelative(p, current_path());
+    if (!tree)
+    {
+        return boost::filesystem::space(p.boost_path(), ec);
+    }
+
+    return tree->space(ec);
 }
 
 file_status status(const path& p)
 {
+    // Note that status works differently than the rest of IO functions in handling the error code
+    // data.
     error_code ec;
     auto result = status(p, ec);
-    throwIfFailedEc(ec, "status", p);
+    if (result.type() == file_type::status_error)
+    {
+        throw boost::filesystem::filesystem_error("status", p.boost_path(), ec);
+    }
     return result;
 }
 
 file_status status(const path& p, error_code& ec)
 {
-    return boost::filesystem::status(p.boost_path(), ec);
+    auto* tree = getTreeForPathMaybeRelative(p, current_path());
+    if (!tree)
+    {
+        return boost::filesystem::status(p.boost_path(), ec);
+    }
+
+    return tree->status(p, ec);
 }
 
 bool status_known(file_status s) noexcept
@@ -505,7 +850,13 @@ file_status symlink_status(const path& p)
 
 file_status symlink_status(const path& p, error_code& ec)
 {
-    return boost::filesystem::symlink_status(p.boost_path(), ec);
+    auto* tree = getTreeForPathMaybeRelative(p, current_path());
+    if (!tree)
+    {
+        return boost::filesystem::symlink_status(p.boost_path(), ec);
+    }
+
+    throw std::invalid_argument("symlink_status not supported yet");
 }
 
 path system_complete(const path& p)
@@ -518,7 +869,14 @@ path system_complete(const path& p)
 
 path system_complete(const path& p, error_code& ec)
 {
-    return boost::filesystem::system_complete(p.boost_path(), ec);
+    auto cwd = current_path();
+    auto* tree = getTreeForPathMaybeRelative(p, cwd);
+    if (!tree)
+    {
+        return boost::filesystem::system_complete(p.boost_path(), ec);
+    }
+
+    return (p.empty() || p.is_absolute()) ? p : cwd / p;
 }
 
 path temp_directory_path()
@@ -531,19 +889,24 @@ path temp_directory_path()
 
 path temp_directory_path(error_code& ec)
 {
+    auto tempDirPath = getManager().getTemporaryDirectoryPath();
+    if (!tempDirPath.empty())
+    {
+        return tempDirPath;
+    }
+
     return boost::filesystem::temp_directory_path(ec);
 }
 
 path unique_path(const path& model)
 {
-    error_code ec;
-    auto result = unique_path(model, ec);
-    throwIfFailedEc(ec, "unique_path", model);
-    return result;
+    // this function is not dependent on filesystem functionality, thus we're calling boost directly
+    return boost::filesystem::unique_path(model.boost_path());
 }
 
 path unique_path(const path& model, error_code& ec)
 {
+    // this function is not dependent on filesystem functionality, thus we're calling boost directly
     return boost::filesystem::unique_path(model.boost_path(), ec);
 }
 
@@ -557,7 +920,13 @@ path weakly_canonical(const path& p)
 
 path weakly_canonical(const path& p, error_code& ec)
 {
-    return boost::filesystem::weakly_canonical(p.boost_path(), ec);
+    auto* tree = getTreeForPathMaybeRelative(p, current_path());
+    if (!tree)
+    {
+        return boost::filesystem::weakly_canonical(p.boost_path(), ec);
+    }
+
+    return tree->weakly_canonical(p, ec);
 }
 
 } //namespace vfs

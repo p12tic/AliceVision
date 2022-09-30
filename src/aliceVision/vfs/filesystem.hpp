@@ -9,6 +9,7 @@
 #include "fwd.hpp"
 #include "path.hpp"
 #include "directory_iterator.hpp"
+#include "generic_filebuf.hpp"
 
 namespace aliceVision {
 namespace vfs {
@@ -19,6 +20,9 @@ namespace vfs {
  * whole AliceVision pipeline is in a single process, such as on Apple iOS which doesn't support
  * running more than a single process.
  */
+
+std::unique_ptr<generic_filebuf> open_file(const path& path, std::ios_base::openmode mode);
+
 // Returns true if the path refers to within virtual filesystem.
 bool is_virtual_path(const path& p);
 

@@ -18,9 +18,9 @@ namespace vfs {
 class generic_filebuf : public std::streambuf {
 public:
 
+    // The filebuf is opened through its constructor. Error states are reported via is_open
+    // afterwards.
     virtual bool is_open() const = 0;
-    virtual generic_filebuf* open(const char* s, std::ios_base::openmode mode) = 0;
-    virtual generic_filebuf* open(const std::string& str, std::ios_base::openmode mode) = 0;
     virtual generic_filebuf* close() = 0;
 };
 

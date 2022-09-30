@@ -4,19 +4,12 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#pragma once
-
-#include <boost/filesystem.hpp>
+#include "IFilesystemTree.hpp"
 
 namespace aliceVision {
 namespace vfs {
 
-using boost::system::error_code;
-using boost::filesystem::copy_options;
-using boost::filesystem::directory_options;
-using boost::filesystem::file_status;
-using boost::filesystem::file_type;
-using boost::filesystem::space_info;
+IFilesystemTree::~IFilesystemTree() = default;
 
 } // namespace vfs
 } // namespace aliceVision

@@ -3,7 +3,10 @@ set(vfs_files_headers
     boost_common.hpp
     directory_entry.hpp
     directory_iterator.hpp
+    IFilesystemTree.hpp
     filesystem.hpp
+    FilesystemManager.hpp
+    FilesystemTreeInMemory.hpp
     generic_filebuf.hpp
     fwd.hpp
     istream.hpp
@@ -17,7 +20,10 @@ set(vfs_files_headers
 set(vfs_files_sources
     directory_entry.cpp
     directory_iterator.cpp
+    IFilesystemTree.cpp
     filesystem.cpp
+    FilesystemManager.cpp
+    FilesystemTreeInMemory.cpp
     istream.cpp
     ostream.cpp
     path.cpp

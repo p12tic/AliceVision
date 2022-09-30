@@ -62,6 +62,9 @@ public:
     int compare(const path& p) const;
     int compare(const std::string& s) const;
 
+    path lexically_normal() const;
+    path lexically_relative(const path& base) const;
+
     path root_path() const;
     path root_name() const;
 

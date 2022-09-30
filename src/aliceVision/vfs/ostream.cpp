@@ -5,16 +5,22 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ostream.hpp"
-#include "std_filebuf.hpp"
+#include "filesystem.hpp"
 
 namespace aliceVision {
 namespace vfs {
 
 void ostream::open(const char* filename, std::ios_base::openmode mode)
 {
-    _buffer = std::make_unique<std_filebuf>();
+    _buffer = open_file(filename, mode | std::ios_base::out);
+    if (!_buffer)
+    {
+        setstate(std::ios_base::failbit);
+        return;
+    }
+
     set_rdbuf(_buffer.get());
-    if (_buffer->open(filename, mode | std::ios_base::out))
+    if (_buffer->is_open())
     {
         clear();
     }

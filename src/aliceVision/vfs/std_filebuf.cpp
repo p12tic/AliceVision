@@ -9,26 +9,16 @@
 namespace aliceVision {
 namespace vfs {
 
-std_filebuf::std_filebuf() = default;
+std_filebuf::std_filebuf(const std::string& str, std::ios_base::openmode mode)
+{
+    _filebuf.open(str, mode);
+}
+
 std_filebuf::~std_filebuf() = default;
 
 bool std_filebuf::is_open() const
 {
     return _filebuf.is_open();
-}
-
-std_filebuf* std_filebuf::open(const char* s, std::ios_base::openmode mode)
-{
-    if (_filebuf.open(s, mode))
-        return this;
-    return nullptr;
-}
-
-std_filebuf* std_filebuf::open(const std::string& str, std::ios_base::openmode mode)
-{
-    if (_filebuf.open(str, mode))
-        return this;
-    return nullptr;
 }
 
 std_filebuf* std_filebuf::close()

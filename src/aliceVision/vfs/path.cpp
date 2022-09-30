@@ -155,6 +155,16 @@ int path::compare(const std::string& s) const
     return _path.compare(s);
 }
 
+path path::lexically_normal() const
+{
+    return _path.lexically_normal();
+}
+
+path path::lexically_relative(const path& base) const
+{
+    return _path.lexically_relative(base._path);
+}
+
 path path::root_path() const
 {
     return _path.root_path();

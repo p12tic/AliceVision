@@ -15,12 +15,10 @@ namespace vfs {
 /// Wraps std::filebuf interface to generic_filebuf
 class std_filebuf : public generic_filebuf {
 public:
-    std_filebuf();
+    std_filebuf(const std::string& str, std::ios_base::openmode mode);
     ~std_filebuf() override;
 
     bool is_open() const override;
-    std_filebuf* open(const char* s, std::ios_base::openmode mode) override;
-    std_filebuf* open(const std::string& str, std::ios_base::openmode mode) override;
     std_filebuf* close() override;
 
 protected:
