@@ -9,7 +9,6 @@
 #include <cmath>
 #include <limits>
 #include <iostream>
-#include <fstream>
 
 #include <aliceVision/system/Logger.hpp>
 #include <aliceVision/system/ParallelFor.hpp>

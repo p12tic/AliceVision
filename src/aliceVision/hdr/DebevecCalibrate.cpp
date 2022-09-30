@@ -14,7 +14,6 @@
 #include <OpenImageIO/imagebufalgo.h>
 
 #include <iostream>
-#include <fstream>
 #include <cassert>
 
 
