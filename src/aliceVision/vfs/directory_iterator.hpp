@@ -9,6 +9,8 @@
 #include "fwd.hpp"
 #include "path.hpp"
 #include "directory_entry.hpp"
+#include "IDirectoryIteratorImpl.hpp"
+#include <memory>
 
 namespace aliceVision {
 namespace vfs {
@@ -29,22 +31,23 @@ public:
 
     directory_iterator& operator=(const directory_iterator& other);
     directory_iterator& operator++();
+    directory_iterator& increment(error_code& ec);
 
     const directory_entry& operator*() const;
     const directory_entry* operator->() const;
 
     bool operator==(const directory_iterator& other) const
     {
-        return _it == other._it;
+        return (!_it && !other._it);
     }
 
     bool operator!=(const directory_iterator& other) const
     {
-        return _it != other._it;
+        return !(*this == other);
     }
 
 private:
-    boost::filesystem::directory_iterator _it;
+    std::shared_ptr<IDirectoryIteratorImpl> _it;
     mutable bool _isCached = false;
     mutable directory_entry _entry;
 };

@@ -18,6 +18,8 @@ public:
     ~FilesystemTreeInMemory() override;
 
     std::unique_ptr<generic_filebuf> open(const path& p, std::ios_base::openmode mode) override;
+    std::shared_ptr<IDirectoryIteratorImpl> open_directory(const path& p,
+                                                           directory_options opts) override;
     bool create_directory(const path& p, error_code& ec) override;
 
     path canonical(const path& p, const path& base, error_code& ec) override;

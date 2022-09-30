@@ -1,9 +1,11 @@
 # Headers
 set(vfs_files_headers
     boost_common.hpp
+    BoostDirectoryIteratorImpl.hpp
     directory_entry.hpp
     directory_iterator.hpp
     IFilesystemTree.hpp
+    IDirectoryIteratorImpl.hpp
     filesystem.hpp
     FilesystemImplUtils.hpp
     FilesystemManager.hpp
@@ -20,9 +22,11 @@ set(vfs_files_headers
 
 # Sources
 set(vfs_files_sources
+    BoostDirectoryIteratorImpl.cpp
     directory_entry.cpp
     directory_iterator.cpp
     IFilesystemTree.cpp
+    IDirectoryIteratorImpl.cpp
     filesystem.cpp
     FilesystemManager.cpp
     FilesystemTreeInMemory.cpp

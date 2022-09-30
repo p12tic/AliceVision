@@ -24,7 +24,7 @@ struct FsTreeFile {
 
 struct FsTreeNode {
     std::mutex mutex;
-    file_type type = file_type::status_error;
+    file_type type = file_type::status_error; // does not change after creation of the instance
 
     // valid only if type == file_type::regular_file
     std::shared_ptr<FsTreeFile> file;
@@ -235,13 +235,81 @@ private:
 
 };
 
+class FilesystemTreeInMemoryDirectoryIterator : public IDirectoryIteratorImpl {
+public:
+    // node must be locked when calling this constructor
+    FilesystemTreeInMemoryDirectoryIterator(vfs::path path,
+                                            const std::shared_ptr<FsTreeNode>& node) :
+        _path{path},
+        _node{node}
+    {
+        _filenames.reserve(_node->entries.size());
+        for (auto entry : _node->entries)
+        {
+            _filenames.push_back(entry.first);
+        }
+        retrieveEntryNoLock();
+    }
+
+    ~FilesystemTreeInMemoryDirectoryIterator() override = default;
+
+    void increment(error_code& ec) override
+    {
+        ec.clear();
+        if (_index >= _filenames.size())
+            return;
+
+        _index++;
+        std::lock_guard<std::mutex> lock{_node->mutex};
+        retrieveEntryNoLock();
+    }
+
+    void retrieveEntryNoLock()
+    {
+        while (true)
+        {
+            if (_index == _filenames.size())
+            {
+                _entry = {};
+                return;
+            }
+            const auto& filename = _filenames[_index];
+            auto it = _node->entries.find(filename);
+            if (it != _node->entries.end())
+            {
+                _entry = directory_entry(_path / filename, file_status{it->second->type});
+                return;
+            }
+            _index++;
+        }
+    }
+
+    directory_entry dereference() override
+    {
+        return _entry;
+    }
+
+    bool is_end() override
+    {
+        return _index >= _filenames.size();
+    }
+
+private:
+    vfs::path _path;
+    directory_entry _entry;
+    std::vector<std::string> _filenames;
+    std::size_t _index = 0;
+    std::shared_ptr<FsTreeNode> _node;
+};
+
+
 namespace {
 
 std::vector<std::string> splitPath(const path& p)
 {
     std::vector<std::string> parts;
     boost::split(parts, p.lexically_normal().relative_path().string(), boost::is_any_of("\\/"));
-    if (!parts.empty() && parts.back() == ".")
+    if (!parts.empty() && (parts.back() == "." || parts.back() == ""))
     {
         parts.pop_back();
     }
@@ -345,6 +413,24 @@ std::unique_ptr<generic_filebuf> FilesystemTreeInMemory::open(const path& p,
 
     // found existing file
     return std::make_unique<FilesystemTreeInMemoryFileBuf>(it->second->file, mode);
+}
+
+std::shared_ptr<IDirectoryIteratorImpl> FilesystemTreeInMemory::open_directory(const path& p,
+                                                                               directory_options opts)
+{
+    if (!p.is_absolute())
+    {
+        return nullptr;
+    }
+
+    auto directoryNode = findTreeNode(_d->root, splitPath(p));
+    if (!directoryNode || directoryNode->type != file_type::directory_file)
+    {
+        return nullptr;
+    }
+
+    std::lock_guard<std::mutex> lock{directoryNode->mutex};
+    return std::make_shared<FilesystemTreeInMemoryDirectoryIterator>(p, directoryNode);
 }
 
 bool FilesystemTreeInMemory::create_directory(const path& p, error_code& ec)

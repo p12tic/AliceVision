@@ -10,6 +10,7 @@
 #include "generic_filebuf.hpp"
 #include "path.hpp"
 #include "special_data.hpp"
+#include "IDirectoryIteratorImpl.hpp"
 
 namespace aliceVision {
 namespace vfs {
@@ -20,6 +21,8 @@ public:
     virtual ~IFilesystemTree();
 
     virtual std::unique_ptr<generic_filebuf> open(const path& p, std::ios_base::openmode mode) = 0;
+    virtual std::shared_ptr<IDirectoryIteratorImpl> open_directory(const path& p,
+                                                                   directory_options opts) = 0;
     virtual bool create_directory(const path& p, error_code& ec) = 0;
     virtual void rename(const path& from, const path& to, error_code& ec) = 0;
 
