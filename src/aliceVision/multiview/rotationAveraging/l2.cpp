@@ -9,6 +9,7 @@
 #include <aliceVision/config.hpp>
 #include <aliceVision/alicevision_omp.hpp>
 #include <aliceVision/system/Logger.hpp>
+#include <aliceVision/system/ParallelFor.hpp>
 
 #include <vector>
 #include <map>
@@ -271,9 +272,9 @@ bool L2RotationAveraging_Refine(
     solverOptions.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
   }
   // set number of threads, 1 if openMP is not enabled
-  solverOptions.num_threads = omp_get_max_threads();
+  solverOptions.num_threads = system::getMaxParallelThreadCount();
 #if CERES_VERSION_MAJOR < 2
-  solverOptions.num_linear_solver_threads = omp_get_max_threads();
+  solverOptions.num_linear_solver_threads = system::getMaxParallelThreadCount();
 #endif
 
   ceres::Solver::Summary summary;

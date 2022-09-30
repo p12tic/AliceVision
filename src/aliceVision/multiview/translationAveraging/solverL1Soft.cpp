@@ -12,6 +12,7 @@
 #include <aliceVision/config.hpp>
 #include <aliceVision/alicevision_omp.hpp>
 #include <aliceVision/system/Logger.hpp>
+#include <aliceVision/system/ParallelFor.hpp>
 
 #include "ceres/ceres.h"
 #include "ceres/rotation.h"
@@ -195,9 +196,9 @@ bool solve_translations_problem_softl1
   options.logging_type = ceres::SILENT;
 
   // set number of threads, 1 if openMP is not enabled
-  options.num_threads = omp_get_max_threads();
+  options.num_threads = system::getMaxParallelThreadCount();
 #if CERES_VERSION_MAJOR < 2
-  options.num_linear_solver_threads = omp_get_max_threads();
+  options.num_linear_solver_threads = system::getMaxParallelThreadCount();
 #endif
 
   ceres::Solver::Summary summary;
