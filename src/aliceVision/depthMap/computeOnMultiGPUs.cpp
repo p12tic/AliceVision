@@ -6,7 +6,7 @@
 
 #include "computeOnMultiGPUs.hpp"
 #include <aliceVision/depthMap/cuda/PlaneSweepingCuda.hpp> // useful for listCUDADevices
-#include <aliceVision/alicevision_omp.hpp>
+#include <aliceVision/system/ParallelFor.hpp>
 
 namespace aliceVision {
 namespace depthMap {
@@ -35,13 +35,13 @@ void computeOnMultiGPUs(mvsUtils::MultiViewParams& mp, const std::vector<int>& c
     }
     else
     {
-        omp_set_num_threads(nbThreads); // create as many CPU threads as there are CUDA devices
-#pragma omp parallel
+        std::atomic<int> cudaDeviceCounter = 0;
+        system::parallelLoop(system::ParallelSettings().setThreadCount(nbThreads),
+                             [&](system::IParallelLoopManager&)
         {
-            const int cpuThreadId = omp_get_thread_num();
-            const int cudaDeviceIndex = cpuThreadId % nbThreads;
+            const int cudaDeviceIndex = cudaDeviceCounter.fetch_add(1);
 
-            ALICEVISION_LOG_INFO("CPU thread " << cpuThreadId << " (of " << nbThreads << ") uses CUDA device: " << cudaDeviceIndex);
+            ALICEVISION_LOG_INFO("CPU thread " << cudaDeviceIndex << " (of " << nbThreads << ") uses CUDA device: " << cudaDeviceIndex);
 
             const int nbCamsPerThread = (cams.size() / nbThreads);
             const int rcFrom = cudaDeviceIndex * nbCamsPerThread;
@@ -60,7 +60,7 @@ void computeOnMultiGPUs(mvsUtils::MultiViewParams& mp, const std::vector<int>& c
             }
 
             gpujob(cudaDeviceIndex, mp, subcams);
-        }
+        });
     }
 }
 
