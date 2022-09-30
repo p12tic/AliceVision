@@ -119,7 +119,8 @@ enum class EStorageDataType
     Float, //< Use full floating point precision to store
     Half, //< Use half (values our of range could become inf or nan)
     HalfFinite, //< Use half, but ensures out-of-range pixels are clamps to keep finite pixel values
-    Auto //< Use half if all pixels can be stored in half without clamp, else use full float
+    Auto, //< Use half if all pixels can be stored in half without clamp, else use full float
+    Undefined //< Storage data type is not defined and should be inferred from other sources
 };
 
 std::string EStorageDataType_informations();
@@ -206,7 +207,6 @@ public:
     EImageColorSpace getFromColorSpace() const { return _fromColorSpace; }
     EImageColorSpace getToColorSpace() const { return _toColorSpace; }
     EStorageDataType getStorageDataType() const { return _storageDataType; }
-    bool isStorageDataTypeSet() const { return _storageDataTypeSet; }
 
     ImageWriteOptions& fromColorSpace(EImageColorSpace colorSpace)
     {
@@ -223,15 +223,13 @@ public:
     ImageWriteOptions& storageDataType(EStorageDataType storageDataType)
     {
         _storageDataType = storageDataType;
-        _storageDataTypeSet = true;
         return *this;
     }
 
 private:
     EImageColorSpace _fromColorSpace{EImageColorSpace::LINEAR};
     EImageColorSpace _toColorSpace{EImageColorSpace::AUTO};
-    EStorageDataType _storageDataType{EStorageDataType::HalfFinite};
-    bool _storageDataTypeSet = false;
+    EStorageDataType _storageDataType{EStorageDataType::Undefined};
 };
 
 /**
