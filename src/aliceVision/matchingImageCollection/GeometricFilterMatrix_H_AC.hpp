@@ -9,7 +9,9 @@
 
 #include <aliceVision/matching/IndMatch.hpp>
 #include <aliceVision/matching/IndMatchDecorator.hpp>
+#include <aliceVision/matching/supportEstimation.hpp>
 #include <aliceVision/matchingImageCollection/GeometricFilterMatrix.hpp>
+#include <aliceVision/matchingImageCollection/geometricFilterUtils.hpp>
 #include <aliceVision/robustEstimation/ACRansac.hpp>
 #include <aliceVision/matching/guidedMatching.hpp>
 #include <aliceVision/multiview/relativePose/Homography4PSolver.hpp>
