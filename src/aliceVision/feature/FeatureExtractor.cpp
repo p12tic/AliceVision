@@ -8,10 +8,8 @@
 #include <aliceVision/image/io.hpp>
 #include <aliceVision/system/MemoryInfo.hpp>
 #include <aliceVision/system/ParallelFor.hpp>
-#include <boost/filesystem.hpp>
+#include <aliceVision/vfs/filesystem.hpp>
 #include <iomanip>
-
-namespace fs = boost::filesystem;
 
 namespace aliceVision {
 namespace feature {
@@ -19,7 +17,7 @@ namespace feature {
 FeatureExtractorViewJob::FeatureExtractorViewJob(const sfmData::View& view,
                                                  const std::string& outputFolder) :
     _view(view),
-    _outputBasename(fs::path(fs::path(outputFolder) / fs::path(std::to_string(view.getViewId()))).string())
+    _outputBasename(vfs::path(vfs::path(outputFolder) / vfs::path(std::to_string(view.getViewId()))).string())
 {}
 
 FeatureExtractorViewJob::~FeatureExtractorViewJob() = default;
@@ -32,8 +30,8 @@ void FeatureExtractorViewJob::setImageDescribers(
         const std::shared_ptr<feature::ImageDescriber>& imageDescriber = imageDescribers.at(i);
         feature::EImageDescriberType imageDescriberType = imageDescriber->getDescriberType();
 
-        if (fs::exists(getFeaturesPath(imageDescriberType)) &&
-            fs::exists(getDescriptorPath(imageDescriberType)))
+        if (vfs::exists(getFeaturesPath(imageDescriberType)) &&
+            vfs::exists(getDescriptorPath(imageDescriberType)))
         {
             continue;
         }
@@ -177,19 +175,19 @@ void FeatureExtractor::computeViewJob(const FeatureExtractorViewJob& job, bool u
 
     image::readImage(job.view().getImagePath(), imageGrayFloat, image::EImageColorSpace::SRGB);
 
-    if (!_masksFolder.empty() && fs::exists(_masksFolder))
+    if (!_masksFolder.empty() && vfs::exists(_masksFolder))
     {
-        const auto masksFolder = fs::path(_masksFolder);
+        const auto masksFolder = vfs::path(_masksFolder);
         const auto idMaskPath = masksFolder /
-                fs::path(std::to_string(job.view().getViewId())).replace_extension("png");
+                vfs::path(std::to_string(job.view().getViewId())).replace_extension("png");
         const auto nameMaskPath = masksFolder /
-                fs::path(job.view().getImagePath()).filename().replace_extension("png");
+                vfs::path(job.view().getImagePath()).filename().replace_extension("png");
 
-        if (fs::exists(idMaskPath))
+        if (vfs::exists(idMaskPath))
         {
             image::readImage(idMaskPath.string(), mask, image::EImageColorSpace::LINEAR);
         }
-        else if (fs::exists(nameMaskPath))
+        else if (vfs::exists(nameMaskPath))
         {
             image::readImage(nameMaskPath.string(), mask, image::EImageColorSpace::LINEAR);
         }
