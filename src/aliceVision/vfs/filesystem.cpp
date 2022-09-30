@@ -22,12 +22,24 @@ IFilesystemTree* getTreeForPathAbsolute(const path& p)
 // base must be absolute path
 IFilesystemTree* getTreeForPathMaybeRelative(const path& p, const path& base)
 {
-    return getTreeForPathAbsolute(p.is_absolute() ? p : base);
+    return getTreeForPathAbsolute((p.is_absolute() || p.has_root_path()) ? p : base);
 }
 
 IFilesystemTree* getCurrentPathTree()
 {
     return getManager().getCurrentPathTree();
+}
+
+bool checkUnsupportedVirtualPathWithoutRootDirectory(const path& p, error_code& ec)
+{
+    if (!p.is_absolute() && p.has_root_name() &&
+        getManager().getTreeAtRootIfExists(p.boost_path().root_name()))
+    {
+        ec.assign(boost::system::errc::no_such_file_or_directory,
+                  boost::system::generic_category());
+        return true;
+    }
+    return false;
 }
 
 void throwIfFailedEc(error_code ec, const char* msg)
@@ -73,7 +85,7 @@ std::unique_ptr<generic_filebuf> open_file(const path& path, std::ios_base::open
 
 bool is_virtual_path(const path& p)
 {
-    if (p.is_absolute())
+    if (p.is_absolute() || p.has_root_path())
     {
         return getTreeForPathAbsolute(p) != nullptr;
     }
@@ -138,6 +150,11 @@ void copy(const path& from, const path& to, error_code& ec)
         return;
     }
 
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(from, ec))
+        return;
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(to, ec))
+        return;
+
     throw std::invalid_argument("copy not supported yet");
 }
 
@@ -157,6 +174,12 @@ void copy_directory(const path& from, const path& to, error_code& ec)
         boost::filesystem::copy_directory(from.boost_path(), to.boost_path(), ec);
         return;
     }
+
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(from, ec))
+        return;
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(to, ec))
+        return;
+
 
     // copy_directory is poorly named function that performs directory creation with the attributes
     // of the source directory. Virtual filesystem does not support attributes, so just create
@@ -194,6 +217,11 @@ void copy_file(const path& from, const path& to, copy_options options, error_cod
                                      boost::native_value(options), ec);
         return;
     }
+
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(from, ec))
+        return;
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(to, ec))
+        return;
 
     auto optionCount = 0;
     optionCount += (options & copy_options::overwrite_existing) != copy_options::none;
@@ -264,6 +292,11 @@ void copy_symlink(const path& existing_symlink, const path& new_symlink, error_c
         boost::filesystem::copy_symlink(existing_symlink.boost_path(), new_symlink.boost_path(), ec);
         return;
     }
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(existing_symlink, ec))
+        return;
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(new_symlink, ec))
+        return;
+
     if (treeExisting != treeNew)
     {
         ec.assign(static_cast<int>(std::errc::cross_device_link),
@@ -294,6 +327,9 @@ bool create_directories(const path& p, error_code& ec)
         ec.assign(boost::system::errc::invalid_argument, boost::system::generic_category());
         return false;
     }
+
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(p, ec))
+        return false;
 
     if (p.filename_is_dot() || p.filename_is_dot_dot())
         return create_directories(p.parent_path(), ec);
@@ -348,6 +384,9 @@ bool create_directory(const path& p, error_code& ec)
         return boost::filesystem::create_directory(p.boost_path(), ec);
     }
 
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(p, ec))
+        return false;
+
     return tree->create_directory(absolute(p, cwd), ec);
 }
 
@@ -367,6 +406,11 @@ void create_directory_symlink(const path& to, const path& new_symlink, error_cod
         boost::filesystem::create_directory_symlink(to.boost_path(), new_symlink.boost_path(), ec);
         return;
     }
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(to, ec))
+        return;
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(new_symlink, ec))
+        return;
+
     if (treeTo != treeNew)
     {
         ec.assign(static_cast<int>(std::errc::cross_device_link),
@@ -392,6 +436,11 @@ void create_hard_link(const path& to, const path& new_hard_link, error_code& ec)
         boost::filesystem::create_hard_link(to.boost_path(), new_hard_link.boost_path(), ec);
         return;
     }
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(to, ec))
+        return;
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(new_hard_link, ec))
+        return;
+
     if (treeTo != treeNew)
     {
         ec.assign(static_cast<int>(std::errc::cross_device_link),
@@ -417,6 +466,11 @@ void create_symlink(const path& to, const path& new_symlink, error_code& ec)
         boost::filesystem::create_symlink(to.boost_path(), new_symlink.boost_path(), ec);
         return;
     }
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(to, ec))
+        return;
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(new_symlink, ec))
+        return;
+
     if (treeTo != treeNew)
     {
         ec.assign(static_cast<int>(std::errc::cross_device_link),
@@ -462,6 +516,9 @@ void current_path(const path& p, error_code& ec)
         boost::filesystem::current_path(p.boost_path(), ec);
         return;
     }
+
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(p, ec))
+        return;
 
     if (getManager().getCurrentPathTree())
     {
@@ -515,6 +572,8 @@ std::uintmax_t file_size(const path& p, error_code& ec)
     {
         return boost::filesystem::file_size(p.boost_path(), ec);
     }
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(p, ec))
+        return 0;
 
     return tree->file_size(p, ec);
 }
@@ -534,6 +593,9 @@ std::uintmax_t hard_link_count(const path& p, error_code& ec)
     {
         return boost::filesystem::hard_link_count(p.boost_path(), ec);
     }
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(p, ec))
+        return 0;
+
     return tree->hard_link_count(ec);
 }
 
@@ -567,6 +629,8 @@ bool is_empty(const path& p, error_code& ec)
     {
         return boost::filesystem::is_empty(p.boost_path(), ec);
     }
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(p, ec))
+        return true;
 
     throw std::invalid_argument("is_empty not supported yet");
 }
@@ -631,6 +695,8 @@ std::time_t last_write_time(const path& p, error_code& ec)
     {
         return boost::filesystem::last_write_time(p.boost_path(), ec);
     }
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(p, ec))
+        return 0;
 
     throw std::invalid_argument("last_write_time not supported yet");
 }
@@ -649,6 +715,8 @@ void last_write_time(const path& p, const std::time_t new_time, error_code& ec)
     {
         boost::filesystem::last_write_time(p.boost_path(), new_time, ec);
     }
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(p, ec))
+        return;
 
     throw std::invalid_argument("last_write_time not supported yet");
 }
@@ -668,6 +736,8 @@ path read_symlink(const path& p, error_code& ec)
     {
         return boost::filesystem::read_symlink(p.boost_path(), ec);
     }
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(p, ec))
+        return path();
 
     throw std::invalid_argument("read_symlink not supported yet");
 }
@@ -722,6 +792,8 @@ bool remove(const path& p, error_code& ec)
     {
         return boost::filesystem::remove(p.boost_path(), ec);
     }
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(p, ec))
+        return false;
 
     return tree->remove(absolute(p, current_path()), ec);
 }
@@ -741,6 +813,8 @@ std::uintmax_t remove_all(const path& p, error_code& ec)
     {
         return boost::filesystem::remove_all(p.boost_path(), ec);
     }
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(p, ec))
+        return 0;
 
     return tree->remove_all(p, ec);
 }
@@ -762,6 +836,11 @@ void rename(const path& from, const path& to, error_code& ec)
         boost::filesystem::rename(from.boost_path(), to.boost_path(), ec);
         return;
     }
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(from, ec))
+        return;
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(to, ec))
+        return;
+
     if (treeFrom != treeTo)
     {
         copy_file(from, to, ec);
@@ -788,6 +867,8 @@ void resize_file(const path& p, std::uintmax_t size, error_code& ec)
     {
         boost::filesystem::resize_file(p.boost_path(), size, ec);
     }
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(p, ec))
+        return;
 
     throw std::invalid_argument("resize_file not supported yet");
 }
@@ -807,6 +888,8 @@ space_info space(const path& p, error_code& ec)
     {
         return boost::filesystem::space(p.boost_path(), ec);
     }
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(p, ec))
+        return {};
 
     return tree->space(ec);
 }
@@ -831,6 +914,8 @@ file_status status(const path& p, error_code& ec)
     {
         return boost::filesystem::status(p.boost_path(), ec);
     }
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(p, ec))
+        return file_status{file_type::status_error};
 
     return tree->status(p, ec);
 }
@@ -855,6 +940,8 @@ file_status symlink_status(const path& p, error_code& ec)
     {
         return boost::filesystem::symlink_status(p.boost_path(), ec);
     }
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(p, ec))
+        return file_status{file_type::status_error};
 
     throw std::invalid_argument("symlink_status not supported yet");
 }
@@ -875,6 +962,8 @@ path system_complete(const path& p, error_code& ec)
     {
         return boost::filesystem::system_complete(p.boost_path(), ec);
     }
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(p, ec))
+        return path();
 
     return (p.empty() || p.is_absolute()) ? p : cwd / p;
 }
@@ -925,6 +1014,8 @@ path weakly_canonical(const path& p, error_code& ec)
     {
         return boost::filesystem::weakly_canonical(p.boost_path(), ec);
     }
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(p, ec))
+        return {};
 
     return tree->weakly_canonical(p, ec);
 }
@@ -944,6 +1035,8 @@ void set_special_data(const path& p, const std::shared_ptr<special_data>& data, 
         ec.assign(boost::system::errc::no_such_file_or_directory, boost::system::generic_category());
         return;
     }
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(p, ec))
+        return;
 
     tree->set_special_data(p, data, ec);
 }
@@ -970,6 +1063,8 @@ std::shared_ptr<special_data> get_special_data(const path& p, error_code& ec)
         ec.assign(boost::system::errc::no_such_file_or_directory, boost::system::generic_category());
         return nullptr;
     }
+    if (checkUnsupportedVirtualPathWithoutRootDirectory(p, ec))
+        return nullptr;
 
     return tree->get_special_data(p, ec);
 }
