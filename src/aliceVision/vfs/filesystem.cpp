@@ -385,14 +385,14 @@ path read_symlink(const path& p, error_code& ec)
 path relative(const path& p)
 {
     error_code ec;
-    auto result = relative(p, ec);
+    auto result = relative(p, current_path(), ec);
     throwIfFailedEc(ec, "relative", p);
     return result;
 }
 
 path relative(const path& p, error_code& ec)
 {
-    return boost::filesystem::relative(p.boost_path(), ec);
+    return relative(p, current_path(), ec);
 }
 
 path relative(const path& p, const path& base)
