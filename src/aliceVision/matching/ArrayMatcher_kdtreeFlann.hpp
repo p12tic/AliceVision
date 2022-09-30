@@ -8,6 +8,7 @@
 #pragma once
 
 #include <aliceVision/matching/ArrayMatcher.hpp>
+#include <aliceVision/system/ParallelFor.hpp>
 #include <aliceVision/config.hpp>
 #include <aliceVision/alicevision_omp.hpp>
 
@@ -121,7 +122,7 @@ class ArrayMatcher_kdtreeFlann : public ArrayMatcher<Scalar, Metric>
     flann::Matrix<Scalar> queries((Scalar*)query, nbQuery, _dimension);
     // do a knn search, using 128 checks
     flann::SearchParams params(128);
-    params.cores = omp_get_max_threads();
+    params.cores = system::getMaxParallelThreadCount();
 
     if (_index->knnSearch(queries, indices, dists, NN, params) <= 0)
       return false;
