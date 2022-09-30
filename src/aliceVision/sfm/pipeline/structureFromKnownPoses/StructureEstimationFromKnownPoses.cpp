@@ -112,7 +112,7 @@ void StructureEstimationFromKnownPoses::match(const SfMData& sfmData,
 
                     std::shared_ptr<IntrinsicBase> camR = iterIntrinsicR->second;
                     std::shared_ptr<camera::Pinhole> pinHoleCamR = std::dynamic_pointer_cast<camera::Pinhole>(camR);
-                    if (!pinHoleCamL) {
+                    if (!pinHoleCamR) {
                         ALICEVISION_LOG_ERROR("Camera is not pinhole in match");
                     }
 
