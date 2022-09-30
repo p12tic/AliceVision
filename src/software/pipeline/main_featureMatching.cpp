@@ -34,10 +34,8 @@
 #include <aliceVision/stl/stl.hpp>
 
 #include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
 
 #include <cstdlib>
-#include <fstream>
 #include <cctype>
 
 // These constants define the current software version.
@@ -55,7 +53,6 @@ using namespace aliceVision::sfmData;
 using namespace aliceVision::matchingImageCollection;
 
 namespace po = boost::program_options;
-namespace fs = boost::filesystem;
 
 void getStatsMap(const PairwiseMatches& map)
 {
@@ -241,7 +238,7 @@ int aliceVision_main(int argc, char **argv)
   std::mt19937 randomNumberGenerator(randomSeed == -1 ? std::random_device()() : randomSeed);
 
   // check and set input options
-  if(matchesFolder.empty() || !fs::is_directory(matchesFolder))
+  if (matchesFolder.empty() || !vfs::is_directory(matchesFolder))
   {
     ALICEVISION_LOG_ERROR("Invalid output matches folder: " + matchesFolder);
     return EXIT_FAILURE;
@@ -420,7 +417,7 @@ int aliceVision_main(int argc, char **argv)
 
   // export putative matches
   if(savePutativeMatches)
-    Save(mapPutativesMatches, (fs::path(matchesFolder) / "putativeMatches").string(), fileExtension, matchFilePerImage, filePrefix);
+    Save(mapPutativesMatches, (vfs::path(matchesFolder) / "putativeMatches").string(), fileExtension, matchFilePerImage, filePrefix);
 
   ALICEVISION_LOG_INFO("Task (Regions Matching) done in (s): " + std::to_string(timer.elapsed()));
 
@@ -431,7 +428,7 @@ int aliceVision_main(int argc, char **argv)
     //-- export putative matches Adjacency matrix
     PairwiseMatchingToAdjacencyMatrixSVG(sfmData.getViews().size(),
       mapPutativesMatches,
-      (fs::path(matchesFolder) / "PutativeAdjacencyMatrix.svg").string());
+      (vfs::path(matchesFolder) / "PutativeAdjacencyMatrix.svg").string());
     //-- export view pair graph once putative graph matches have been computed
     {
       std::set<IndexT> set_ViewIds;
@@ -442,7 +439,7 @@ int aliceVision_main(int argc, char **argv)
       graph::indexedGraph putativeGraph(set_ViewIds, getPairs(mapPutativesMatches));
 
       graph::exportToGraphvizData(
-        (fs::path(matchesFolder) / "putative_matches.dot").string(),
+        (vfs::path(matchesFolder) / "putative_matches.dot").string(),
         putativeGraph.g);
     }
   }
@@ -582,7 +579,7 @@ int aliceVision_main(int argc, char **argv)
     // export Adjacency matrix
     ALICEVISION_LOG_INFO("Export Adjacency Matrix of the pairwise's geometric matches");
     PairwiseMatchingToAdjacencyMatrixSVG(sfmData.getViews().size(),
-      finalMatches,(fs::path(matchesFolder) / "GeometricAdjacencyMatrix.svg").string());
+      finalMatches,(vfs::path(matchesFolder) / "GeometricAdjacencyMatrix.svg").string());
 
     /*
     // export view pair graph once geometric filter have been done
@@ -592,7 +589,7 @@ int aliceVision_main(int argc, char **argv)
         std::inserter(set_ViewIds, set_ViewIds.begin()), stl::RetrieveKey());
       graph::indexedGraph putativeGraph(set_ViewIds, getPairs(finalMatches));
       graph::exportToGraphvizData(
-        (fs::path(matchesFolder) / "geometric_matches.dot").string(),
+        (vfs::path(matchesFolder) / "geometric_matches.dot").string(),
         putativeGraph.g);
     }
     */
