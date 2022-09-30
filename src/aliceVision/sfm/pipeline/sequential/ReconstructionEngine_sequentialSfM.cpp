@@ -11,6 +11,7 @@
 #include <aliceVision/sfmDataIO/sfmDataIO.hpp>
 #include <aliceVision/sfm/BundleAdjustmentCeres.hpp>
 #include <aliceVision/sfm/BundleAdjustmentSymbolicCeres.hpp>
+#include <aliceVision/sfm/LocalBundleAdjustmentGraph.hpp>
 #include <aliceVision/sfm/sfmFilters.hpp>
 #include <aliceVision/sfm/sfmStatistics.hpp>
 
@@ -160,6 +161,8 @@ ReconstructionEngine_sequentialSfM::ReconstructionEngine_sequentialSfM(
   if(!vfs::exists(_sfmStepFolder))
     vfs::create_directory(_sfmStepFolder);
 }
+
+ReconstructionEngine_sequentialSfM::~ReconstructionEngine_sequentialSfM() = default;
 
 bool ReconstructionEngine_sequentialSfM::process()
 {

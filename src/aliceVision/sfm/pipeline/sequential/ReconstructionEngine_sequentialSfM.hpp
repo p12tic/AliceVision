@@ -7,26 +7,31 @@
 
 #pragma once
 
+#include <aliceVision/sfm/BundleAdjustment.hpp>
 #include <aliceVision/sfm/pipeline/ReconstructionEngine.hpp>
-#include <aliceVision/sfm/LocalBundleAdjustmentGraph.hpp>
 #include <aliceVision/sfm/pipeline/localization/SfMLocalizer.hpp>
 #include <aliceVision/sfm/pipeline/pairwiseMatchesIO.hpp>
 #include <aliceVision/sfm/pipeline/RigSequence.hpp>
 #include <aliceVision/sfmDataIO/sfmDataIO.hpp>
 #include <aliceVision/feature/FeaturesPerView.hpp>
 #include <aliceVision/track/TracksBuilder.hpp>
-#include <dependencies/htmlDoc/htmlDoc.hpp>
 #include <aliceVision/utils/Histogram.hpp>
 
 #include <boost/property_tree/ptree.hpp>
 
 namespace pt = boost::property_tree;
 
+namespace htmlDocument {
+    class htmlDocumentStream;
+}
+
 namespace aliceVision {
 namespace sfm {
 
 /// Image score contains <ImageId, NbPutativeCommonPoint, score, isIntrinsicsReconstructed>
 typedef std::tuple<IndexT, std::size_t, std::size_t, bool> ViewConnectionScore;
+
+class LocalBundleAdjustmentGraph;
 
 /**
  * @brief Sequential SfM Pipeline Reconstruction Engine.
@@ -92,6 +97,8 @@ public:
                                      const Params& params,
                                      const std::string& outputFolder,
                                      const std::string& loggingFile = "");
+
+  ~ReconstructionEngine_sequentialSfM() override;
 
   void setFeatures(feature::FeaturesPerView* featuresPerView)
   {
