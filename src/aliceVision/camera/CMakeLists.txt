@@ -25,6 +25,7 @@ set(camera_files_headers
 
 set(camera_files_sources
     camera.cpp
+    cameraCommon.cpp
 )
 
 alicevision_add_library(aliceVision_camera
