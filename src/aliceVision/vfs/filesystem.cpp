@@ -9,6 +9,34 @@
 namespace aliceVision {
 namespace vfs {
 
+namespace {
+
+void throwIfFailedEc(error_code ec, const char* msg)
+{
+    if (ec)
+    {
+        throw boost::filesystem::filesystem_error(msg, ec);
+    }
+}
+
+void throwIfFailedEc(error_code ec, const char* msg, const path& path)
+{
+    if (ec)
+    {
+        throw boost::filesystem::filesystem_error(msg, path.boost_path(), ec);
+    }
+}
+
+void throwIfFailedEc(error_code ec, const char* msg, const path& path1, const path& path2)
+{
+    if (ec)
+    {
+        throw boost::filesystem::filesystem_error(msg, path1.boost_path(), path2.boost_path(), ec);
+    }
+}
+
+} // namespace
+
 bool is_virtual_path(const path& p)
 {
     return false;
@@ -36,7 +64,10 @@ path canonical(const path& p, error_code& ec)
 
 path canonical(const path& p, const path& base)
 {
-    return boost::filesystem::canonical(p.boost_path(), base.boost_path());
+    error_code ec;
+    auto result = canonical(p, base, ec);
+    throwIfFailedEc(ec, "canonical", p, base);
+    return result;
 }
 
 path canonical(const path& p, const path& base, error_code& ec)
@@ -46,7 +77,9 @@ path canonical(const path& p, const path& base, error_code& ec)
 
 void copy(const path& from, const path& to)
 {
-    boost::filesystem::copy(from.boost_path(), to.boost_path());
+    error_code ec;
+    copy(from, to, ec);
+    throwIfFailedEc(ec, "copy", from, to);
 }
 
 void copy(const path& from, const path& to, error_code& ec)
@@ -56,7 +89,9 @@ void copy(const path& from, const path& to, error_code& ec)
 
 void copy_directory(const path& from, const path& to)
 {
-    boost::filesystem::copy_directory(from.boost_path(), to.boost_path());
+    error_code ec;
+    copy_directory(from, to, ec);
+    throwIfFailedEc(ec, "copy_directory", from, to);
 }
 
 void copy_directory(const path& from, const path& to, error_code& ec)
@@ -66,7 +101,9 @@ void copy_directory(const path& from, const path& to, error_code& ec)
 
 void copy_file(const path& from, const path& to)
 {
-    boost::filesystem::copy_file(from.boost_path(), to.boost_path());
+    error_code ec;
+    copy_file(from, to, ec);
+    throwIfFailedEc(ec, "copy_file", from, to);
 }
 
 void copy_file(const path& from, const path& to, error_code& ec)
@@ -76,7 +113,9 @@ void copy_file(const path& from, const path& to, error_code& ec)
 
 void copy_file(const path& from, const path& to, copy_options option)
 {
-    boost::filesystem::copy_file(from.boost_path(), to.boost_path(), boost::native_value(option));
+    error_code ec;
+    copy_file(from, to, option, ec);
+    throwIfFailedEc(ec, "copy_file", from, to);
 }
 
 void copy_file(const path& from, const path& to, copy_options options, error_code& ec)
@@ -87,7 +126,9 @@ void copy_file(const path& from, const path& to, copy_options options, error_cod
 
 void copy_symlink(const path& existing_symlink, const path& new_symlink)
 {
-    boost::filesystem::copy_symlink(existing_symlink.boost_path(), new_symlink.boost_path());
+    error_code ec;
+    copy_symlink(existing_symlink, new_symlink, ec);
+    throwIfFailedEc(ec, "copy_symlink", existing_symlink, new_symlink);
 }
 
 void copy_symlink(const path& existing_symlink, const path& new_symlink, error_code& ec)
@@ -97,7 +138,10 @@ void copy_symlink(const path& existing_symlink, const path& new_symlink, error_c
 
 bool create_directories(const path& p)
 {
-    return boost::filesystem::create_directories(p.boost_path());
+    error_code ec;
+    auto result = create_directories(p, ec);
+    throwIfFailedEc(ec, "create_directories", p);
+    return result;
 }
 
 bool create_directories(const path& p, error_code& ec)
@@ -107,7 +151,10 @@ bool create_directories(const path& p, error_code& ec)
 
 bool create_directory(const path& p)
 {
-    return boost::filesystem::create_directory(p.boost_path());
+    error_code ec;
+    auto result = create_directory(p, ec);
+    throwIfFailedEc(ec, "create_directory", p);
+    return result;
 }
 
 bool create_directory(const path& p, error_code& ec)
@@ -117,7 +164,9 @@ bool create_directory(const path& p, error_code& ec)
 
 void create_directory_symlink(const path& to, const path& new_symlink)
 {
-    boost::filesystem::create_directory_symlink(to.boost_path(), new_symlink.boost_path());
+    error_code ec;
+    create_directory_symlink(to, new_symlink, ec);
+    throwIfFailedEc(ec, "create_directory_symlink", to, new_symlink);
 }
 
 void create_directory_symlink(const path& to, const path& new_symlink, error_code& ec)
@@ -127,7 +176,9 @@ void create_directory_symlink(const path& to, const path& new_symlink, error_cod
 
 void create_hard_link(const path& to, const path& new_hard_link)
 {
-    boost::filesystem::create_hard_link(to.boost_path(), new_hard_link.boost_path());
+    error_code ec;
+    create_hard_link(to, new_hard_link, ec);
+    throwIfFailedEc(ec, "create_hard_link", to, new_hard_link);
 }
 
 void create_hard_link(const path& to, const path& new_hard_link, error_code& ec)
@@ -137,7 +188,9 @@ void create_hard_link(const path& to, const path& new_hard_link, error_code& ec)
 
 void create_symlink(const path& to, const path& new_symlink)
 {
-    boost::filesystem::create_symlink(to.boost_path(), new_symlink.boost_path());
+    error_code ec;
+    create_symlink(to, new_symlink, ec);
+    throwIfFailedEc(ec, "create_symlink", to, new_symlink);
 }
 
 void create_symlink(const path& to, const path& new_symlink, error_code& ec)
@@ -147,7 +200,10 @@ void create_symlink(const path& to, const path& new_symlink, error_code& ec)
 
 path current_path()
 {
-    return boost::filesystem::current_path();
+    error_code ec;
+    path result = current_path(ec);
+    throwIfFailedEc(ec, "current_path");
+    return result;
 }
 
 path current_path(error_code& ec)
@@ -157,7 +213,9 @@ path current_path(error_code& ec)
 
 void current_path(const path& p)
 {
-    boost::filesystem::current_path(p.boost_path());
+    error_code ec;
+    current_path(p, ec);
+    throwIfFailedEc(ec, "current_path", p);
 }
 
 void current_path(const path& p, error_code& ec)
@@ -192,7 +250,10 @@ bool equivalent(const path& p1, const path& p2, error_code& ec)
 
 std::uintmax_t file_size(const path& p)
 {
-    return boost::filesystem::file_size(p.boost_path());
+    error_code ec;
+    auto result = file_size(p, ec);
+    throwIfFailedEc(ec, "file_size", p);
+    return result;
 }
 
 std::uintmax_t file_size(const path& p, error_code& ec)
@@ -202,7 +263,10 @@ std::uintmax_t file_size(const path& p, error_code& ec)
 
 std::uintmax_t hard_link_count(const path& p)
 {
-    return boost::filesystem::hard_link_count(p.boost_path());
+    error_code ec;
+    auto result = hard_link_count(p, ec);
+    throwIfFailedEc(ec, "hard_link_count", p);
+    return result;
 }
 
 std::uintmax_t hard_link_count(const path& p, error_code& ec)
@@ -282,7 +346,10 @@ bool is_symlink(const path& p, error_code& ec)
 
 std::time_t last_write_time(const path& p)
 {
-    return boost::filesystem::last_write_time(p.boost_path());
+    error_code ec;
+    auto result = last_write_time(p, ec);
+    throwIfFailedEc(ec, "last_write_time", p);
+    return result;
 }
 
 std::time_t last_write_time(const path& p, error_code& ec)
@@ -292,7 +359,9 @@ std::time_t last_write_time(const path& p, error_code& ec)
 
 void last_write_time(const path& p, const std::time_t new_time)
 {
-    boost::filesystem::last_write_time(p.boost_path(), new_time);
+    error_code ec;
+    last_write_time(p, new_time, ec);
+    throwIfFailedEc(ec, "last_write_time", p);
 }
 
 void last_write_time(const path& p, const std::time_t new_time, error_code& ec)
@@ -302,7 +371,10 @@ void last_write_time(const path& p, const std::time_t new_time, error_code& ec)
 
 path read_symlink(const path& p)
 {
-    return boost::filesystem::read_symlink(p.boost_path());
+    error_code ec;
+    auto result = read_symlink(p, ec);
+    throwIfFailedEc(ec, "read_symlink", p);
+    return result;
 }
 
 path read_symlink(const path& p, error_code& ec)
@@ -312,7 +384,10 @@ path read_symlink(const path& p, error_code& ec)
 
 path relative(const path& p)
 {
-    return boost::filesystem::relative(p.boost_path());
+    error_code ec;
+    auto result = relative(p, ec);
+    throwIfFailedEc(ec, "relative", p);
+    return result;
 }
 
 path relative(const path& p, error_code& ec)
@@ -322,7 +397,10 @@ path relative(const path& p, error_code& ec)
 
 path relative(const path& p, const path& base)
 {
-    return boost::filesystem::relative(p.boost_path(), base.boost_path());
+    error_code ec;
+    auto result = relative(p, base, ec);
+    throwIfFailedEc(ec, "relative", p, base);
+    return result;
 }
 
 path relative(const path& p, const path& base, error_code& ec)
@@ -332,7 +410,10 @@ path relative(const path& p, const path& base, error_code& ec)
 
 bool remove(const path& p)
 {
-    return boost::filesystem::remove(p.boost_path());
+    error_code ec;
+    auto result = remove(p, ec);
+    throwIfFailedEc(ec, "remove", p);
+    return result;
 }
 
 bool remove(const path& p, error_code& ec)
@@ -342,7 +423,10 @@ bool remove(const path& p, error_code& ec)
 
 std::uintmax_t remove_all(const path& p)
 {
-    return boost::filesystem::remove_all(p.boost_path());
+    error_code ec;
+    auto result = remove_all(p, ec);
+    throwIfFailedEc(ec, "remove_all", p);
+    return result;
 }
 
 std::uintmax_t remove_all(const path& p, error_code& ec)
@@ -352,7 +436,9 @@ std::uintmax_t remove_all(const path& p, error_code& ec)
 
 void rename(const path& from, const path& to)
 {
-    boost::filesystem::rename(from.boost_path(), to.boost_path());
+    error_code ec;
+    rename(from, to, ec);
+    throwIfFailedEc(ec, "rename", from, to);
 }
 
 void rename(const path& from, const path& to, error_code& ec)
@@ -362,7 +448,9 @@ void rename(const path& from, const path& to, error_code& ec)
 
 void resize_file(const path& p, std::uintmax_t size)
 {
-    boost::filesystem::resize_file(p.boost_path(), size);
+    error_code ec;
+    resize_file(p, size, ec);
+    throwIfFailedEc(ec, "resize_file", p);
 }
 
 void resize_file(const path& p, std::uintmax_t size, error_code& ec)
@@ -372,7 +460,10 @@ void resize_file(const path& p, std::uintmax_t size, error_code& ec)
 
 space_info space(const path& p)
 {
-    return boost::filesystem::space(p.boost_path());
+    error_code ec;
+    auto result = space(p, ec);
+    throwIfFailedEc(ec, "space", p);
+    return result;
 }
 
 space_info space(const path& p, error_code& ec)
@@ -407,7 +498,10 @@ file_status symlink_status(const path& p, error_code& ec)
 
 path system_complete(const path& p)
 {
-    return boost::filesystem::system_complete(p.boost_path());
+    error_code ec;
+    auto result = system_complete(p, ec);
+    throwIfFailedEc(ec, "system_complete", p);
+    return result;
 }
 
 path system_complete(const path& p, error_code& ec)
@@ -417,7 +511,10 @@ path system_complete(const path& p, error_code& ec)
 
 path temp_directory_path()
 {
-    return boost::filesystem::temp_directory_path();
+    error_code ec;
+    auto result = temp_directory_path(ec);
+    throwIfFailedEc(ec, "temp_directory_path");
+    return result;
 }
 
 path temp_directory_path(error_code& ec)
@@ -427,7 +524,10 @@ path temp_directory_path(error_code& ec)
 
 path unique_path(const path& model)
 {
-    return boost::filesystem::unique_path(model.boost_path());
+    error_code ec;
+    auto result = unique_path(model, ec);
+    throwIfFailedEc(ec, "unique_path", model);
+    return result;
 }
 
 path unique_path(const path& model, error_code& ec)
@@ -437,7 +537,10 @@ path unique_path(const path& model, error_code& ec)
 
 path weakly_canonical(const path& p)
 {
-    return boost::filesystem::weakly_canonical(p.boost_path());
+    error_code ec;
+    auto result = weakly_canonical(p, ec);
+    throwIfFailedEc(ec, "weakly_canonical", p);
+    return result;
 }
 
 path weakly_canonical(const path& p, error_code& ec)
