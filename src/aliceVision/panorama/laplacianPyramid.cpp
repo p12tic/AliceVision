@@ -12,13 +12,9 @@ _baseWidth(base_width),
 _baseHeight(base_height),
 _maxLevels(max_levels)
 {
-    omp_init_lock(&_merge_lock);
 }
 
-LaplacianPyramid::~LaplacianPyramid()
-{
-    omp_destroy_lock(&_merge_lock);
-}
+LaplacianPyramid::~LaplacianPyramid() = default;
 
 bool LaplacianPyramid::initialize() 
 {
@@ -200,13 +196,12 @@ bool LaplacianPyramid::apply(aliceVision::image::Image<image::RGBfColor>& source
         }
 
         //Merge this view with previous ones
-        omp_set_lock(&_merge_lock);
-        bool res = merge(currentColor, currentWeights, l, offsetX, offsetY);
-        omp_unset_lock(&_merge_lock);
-
-        if (!res)
         {
-            return false;
+            std::lock_guard<std::mutex> lock(_merge_mutex);
+            if (!merge(currentColor, currentWeights, l, offsetX, offsetY))
+            {
+                return false;
+            }
         }
 
         //Swap buffers
@@ -229,10 +224,10 @@ bool LaplacianPyramid::apply(aliceVision::image::Image<image::RGBfColor>& source
     iinfo.mask = currentMask;
     iinfo.weights = currentWeights;
 
-    omp_set_lock(&_merge_lock);
-    _inputInfos.push_back(iinfo);
-    omp_unset_lock(&_merge_lock);
-    
+    {
+        std::lock_guard<std::mutex> lock(_merge_mutex);
+        _inputInfos.push_back(iinfo);
+    }
 
     return true;
 }

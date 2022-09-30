@@ -3,6 +3,7 @@
 #include "imageOps.hpp"
 
 #include <aliceVision/image/all.hpp>
+#include <mutex>
 
 namespace aliceVision
 {
@@ -41,7 +42,7 @@ private:
     int _baseWidth;
     int _baseHeight;
     int _maxLevels;
-    omp_lock_t _merge_lock;
+    std::mutex _merge_mutex;
 
     std::vector<image::Image<image::RGBfColor>> _levels;
     std::vector<image::Image<float>> _weights;
