@@ -8,18 +8,14 @@
 #include <aliceVision/system/Logger.hpp>
 #include <aliceVision/system/ParallelFor.hpp>
 
-#include <boost/filesystem.hpp>
-
 namespace aliceVision {
 namespace mesh {
-
-namespace bfs = boost::filesystem;
 
 MeshEnergyOpt::MeshEnergyOpt(mvsUtils::MultiViewParams* _mp)
     : MeshAnalyze(_mp)
 {
 //    tmpDir = mp->mvDir + "meshEnergyOpt/";
-//    bfs::create_directory(tmpDir);
+//    vfs::create_directory(tmpDir);
 }
 
 MeshEnergyOpt::~MeshEnergyOpt() = default;

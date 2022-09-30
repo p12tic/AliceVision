@@ -16,10 +16,7 @@
 #include <aliceVision/mesh/Mesh.hpp>
 #include <aliceVision/mesh/meshVisibility.hpp>
 #include <aliceVision/stl/bitmask.hpp>
-
-#include <boost/filesystem.hpp>
-
-namespace bfs = boost::filesystem;
+#include <aliceVision/vfs/fwd.hpp>
 
 namespace GEO {
     class MeshFacetsAABB;
@@ -191,30 +188,30 @@ public:
 
     /// Generate texture files for all texture atlases
     void generateTextures(const mvsUtils::MultiViewParams& mp,
-                          const bfs::path &outPath,
+                          const vfs::path &outPath,
                           image::EImageFileType textureFileType = image::EImageFileType::PNG);
 
     /// Generate texture files for the given sub-set of texture atlases
     void generateTexturesSubSet(const mvsUtils::MultiViewParams& mp,
                                 const std::vector<size_t>& atlasIDs,
                                 mvsUtils::ImagesCache<image::Image<image::RGBfColor>>& imageCache,
-                                const bfs::path &outPath,
+                                const vfs::path &outPath,
                                 image::EImageFileType textureFileType = image::EImageFileType::PNG);
 
     void generateNormalAndHeightMaps(const mvsUtils::MultiViewParams& mp, const Mesh& denseMesh,
-                                     const bfs::path& outPath, const mesh::BumpMappingParams& bumpMappingParams);
+                                     const vfs::path& outPath, const mesh::BumpMappingParams& bumpMappingParams);
 
     void _generateNormalAndHeightMaps(const mvsUtils::MultiViewParams& mp, const GEO::MeshFacetsAABB& denseMeshAABB,
                                       const GEO::Mesh& sparseMesh, size_t atlasID,
                                       mvsUtils::ImagesCache<image::Image<image::RGBfColor> >& imageCache,
-                                      const bfs::path& outPath, const mesh::BumpMappingParams& bumpMappingParams);
+                                      const vfs::path& outPath, const mesh::BumpMappingParams& bumpMappingParams);
 
     ///Fill holes and write texture files for the given texture atlas
-    void writeTexture(AccuImage& atlasTexture, const std::size_t atlasID, const bfs::path& outPath,
+    void writeTexture(AccuImage& atlasTexture, const std::size_t atlasID, const vfs::path& outPath,
                       image::EImageFileType textureFileType, const int level);
 
     /// Save textured mesh as an OBJ + MTL file
-    void saveAs(const bfs::path& dir, const std::string& basename,
+    void saveAs(const vfs::path& dir, const std::string& basename,
                 aliceVision::mesh::EFileType meshFileType = aliceVision::mesh::EFileType::OBJ,
                 image::EImageFileType textureFileType = image::EImageFileType::EXR,
                 const BumpMappingParams& bumpMappingParams = BumpMappingParams());
