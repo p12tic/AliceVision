@@ -17,6 +17,8 @@
 #include <aliceVision/system/main.hpp>
 #include <aliceVision/types.hpp>
 #include <aliceVision/utils/convert.hpp>
+#include <aliceVision/vfs/filesystem.hpp>
+#include <aliceVision/vfs/ostream.hpp>
 
 #include <Eigen/Core>
 
@@ -24,9 +26,6 @@
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/tail.hpp>
 
-#include <iostream>
-#include <fstream>
-#include <ostream>
 #include <string>
 #include <chrono>
 #include <iomanip>
@@ -40,7 +39,6 @@ static const int DIMENSION = 128;
 
 using namespace boost::accumulators;
 namespace po = boost::program_options;
-namespace fs = boost::filesystem;
 using namespace aliceVision;
 using namespace aliceVision::feature;
 
@@ -49,7 +47,7 @@ typedef aliceVision::feature::Descriptor<unsigned char, DIMENSION> DescriptorUCh
 
 bool saveSparseHistogramPerImage(const std::string &filename, const aliceVision::voctree::SparseHistogramPerImage &docs)
 {
-  std::ofstream fileout(filename);
+  vfs::ostream fileout(filename);
   if(!fileout.is_open())
     return false;
 
@@ -266,10 +264,10 @@ int aliceVision_main(int argc, char** argv)
     }
 
     // create recursively the provided out dir
-    if(!fs::exists(fs::path(outDir)))
+    if (!vfs::exists(vfs::path(outDir)))
     {
 //      ALICEVISION_COUT("creating folder" << outDir);
-      fs::create_directories(fs::path(outDir));
+      vfs::create_directories(vfs::path(outDir));
     }
 
   }
@@ -313,10 +311,10 @@ int aliceVision_main(int argc, char** argv)
     // if 0 retrieve the score for all the documents of the database
     numImageQuery = db.size();
   }
-  std::ofstream fileout;
+  vfs::ostream fileout;
   if(withOutput)
   {
-    fileout.open(outfile, std::ofstream::out);
+    fileout.open(outfile, vfs::ostream::out);
   }
 
   std::map<std::size_t, voctree::SparseHistogram> histograms;
@@ -360,7 +358,7 @@ int aliceVision_main(int argc, char** argv)
   for(auto docMatches: allDocMatches)
   {
     const aliceVision::voctree::DocMatches& matches = docMatches.second;
-    fs::path dirname;
+    vfs::path dirname;
     ALICEVISION_LOG_INFO("Camera: " << docMatches.first);
     ALICEVISION_LOG_INFO("query document " << docMatches.first << " has " << matches.size() << " matches\tBest " << matches[0].id << " with score " << matches[0].score);
     if(withOutput)
@@ -381,8 +379,8 @@ int aliceVision_main(int argc, char** argv)
       // the query image can be either from the dataset or from the query list if provided
 
       // to put a symlink to the query image too
-      fs::path absoluteFilename; //< the abs path to the image
-      fs::path sylinkName; //< the name used for the symbolic link
+      vfs::path absoluteFilename; //< the abs path to the image
+      vfs::path sylinkName; //< the name used for the symbolic link
 
       // get the dirname from the filename
       
@@ -393,11 +391,11 @@ int aliceVision_main(int argc, char** argv)
         ALICEVISION_LOG_ERROR("Could not find the image file for the document " << docMatches.first << "!");
         return EXIT_FAILURE;
       }
-      sylinkName = fs::path(it->second->getImagePath()).filename();
-      dirname = fs::path(outDir) / sylinkName;
+      sylinkName = vfs::path(it->second->getImagePath()).filename();
+      dirname = vfs::path(outDir) / sylinkName;
       absoluteFilename = it->second->getImagePath();
-      fs::create_directories(dirname);
-      fs::create_symlink(absoluteFilename, dirname / sylinkName);
+      vfs::create_directories(dirname);
+      vfs::create_symlink(absoluteFilename, dirname / sylinkName);
       
       // Perform features matching
       const aliceVision::voctree::SparseHistogram& currentHistogram = histograms.at(docMatches.first);
@@ -459,16 +457,16 @@ int aliceVision_main(int argc, char** argv)
       {
         // create a new symbolic link inside the current folder pointing to
         // the relevant matching image
-        fs::path absoluteFilename; //< the abs path to the image
-        fs::path sylinkName; //< the name used for the symbolic link
+        vfs::path absoluteFilename; //< the abs path to the image
+        vfs::path sylinkName; //< the name used for the symbolic link
 
         // get the dirname from the filename
         aliceVision::sfmData::Views::const_iterator it = sfmData.getViews().find(matches[j].id);
         if(it != sfmData.getViews().end())
         {
           absoluteFilename = it->second->getImagePath();
-          sylinkName = fs::path(utils::toStringZeroPadded(j, 4) + "." + std::to_string(matches[j].score) +
-                                "." + absoluteFilename.filename().string());
+          sylinkName = vfs::path(utils::toStringZeroPadded(j, 4) + "." + std::to_string(matches[j].score) +
+                                 "." + absoluteFilename.filename().string());
         }
         else
         {
@@ -476,7 +474,7 @@ int aliceVision_main(int argc, char** argv)
           ALICEVISION_LOG_ERROR("Could not find the image file for the document " << matches[j].id << "!");
           return EXIT_FAILURE;
         }
-        fs::create_symlink(absoluteFilename, dirname / sylinkName);
+        vfs::create_symlink(absoluteFilename, dirname / sylinkName);
       }
     }
 
