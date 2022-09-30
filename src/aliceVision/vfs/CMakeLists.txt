@@ -42,3 +42,5 @@ alicevision_add_library(aliceVision_vfs
   PUBLIC_LINKS
     Boost::filesystem
 )
+
+alicevision_add_test(filesystem_test.cpp NAME "filesystem" LINKS aliceVision_vfs)
