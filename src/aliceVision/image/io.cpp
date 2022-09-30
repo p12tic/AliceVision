@@ -18,15 +18,12 @@
 
 #include <aliceVision/half.hpp>
 
-#include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include <cstring>
 #include <stdexcept>
 #include <iostream>
 #include <cmath>
-
-namespace fs = boost::filesystem;
 
 namespace aliceVision {
 namespace image {
@@ -440,7 +437,7 @@ void readImage(const std::string& path,
     if (nchannels == 2)
         throw std::runtime_error("Load of 2 channels is not supported. Image file: '" + path + "'.");
 
-  if(!fs::exists(path))
+  if (!vfs::exists(path))
     ALICEVISION_THROW_ERROR("No such image file: '" << path << "'.");
 
   oiio::ImageSpec configSpec;
@@ -604,9 +601,9 @@ void writeImage(const std::string& path,
                 const oiio::ParamValueList& metadata = oiio::ParamValueList(),
                 const oiio::ROI& roi = oiio::ROI())
 {
-  const fs::path bPath = fs::path(path);
+  const vfs::path bPath = vfs::path(path);
   const std::string extension = boost::to_lower_copy(bPath.extension().string());
-  const std::string tmpPath =  (bPath.parent_path() / bPath.stem()).string() + "." + fs::unique_path().string() + extension;
+  const std::string tmpPath =  (bPath.parent_path() / bPath.stem()).string() + "." + vfs::unique_path().string() + extension;
   const bool isEXR = (extension == ".exr");
   //const bool isTIF = (extension == ".tif");
   const bool isJPG = (extension == ".jpg");
@@ -779,7 +776,7 @@ void writeImageNoFloat(const std::string& path,
     throw std::runtime_error("Can't write output image file '" + path + "'.");
 
   // rename temporary filename
-  fs::rename(tmpPath, path);
+  vfs::rename(tmpPath, path);
 }
 
 void readImage(const std::string& path, Image<float>& image, const ImageReadOptions & imageReadOptions)
@@ -897,18 +894,18 @@ bool tryLoadMask(Image<unsigned char>* mask, const std::vector<std::string>& mas
 {
     for (const auto & masksFolder_str : masksFolders)
     {
-        if (!masksFolder_str.empty() && fs::exists(masksFolder_str))
+        if (!masksFolder_str.empty() && vfs::exists(masksFolder_str))
         {
-            const auto masksFolder = fs::path(masksFolder_str);
-            const auto idMaskPath = masksFolder / fs::path(std::to_string(viewId)).replace_extension("png");
-            const auto nameMaskPath = masksFolder / fs::path(srcImage).filename().replace_extension("png");
+            const auto masksFolder = vfs::path(masksFolder_str);
+            const auto idMaskPath = masksFolder / vfs::path(std::to_string(viewId)).replace_extension("png");
+            const auto nameMaskPath = masksFolder / vfs::path(srcImage).filename().replace_extension("png");
 
-            if (fs::exists(idMaskPath))
+            if (vfs::exists(idMaskPath))
             {
                 readImage(idMaskPath.string(), *mask, EImageColorSpace::LINEAR);
                 return true;
             }
-            else if (fs::exists(nameMaskPath))
+            else if (vfs::exists(nameMaskPath))
             {
                 readImage(nameMaskPath.string(), *mask, EImageColorSpace::LINEAR);
                 return true;
