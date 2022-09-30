@@ -8,6 +8,8 @@
 #include <aliceVision/camera/camera.hpp>
 #include <aliceVision/sfmDataIO/viewIO.hpp>
 #include <aliceVision/system/ParallelFor.hpp>
+#include <aliceVision/vfs/istream.hpp>
+#include <aliceVision/vfs/ostream.hpp>
 
 #include <boost/property_tree/json_parser.hpp>
 
@@ -493,8 +495,8 @@ bool saveJSON(const sfmData::SfMData& sfmData, const std::string& filename, ESfM
   }
 
   // write the json file with the tree
-
-  bpt::write_json(filename, fileTree);
+  vfs::ostream out{filename};
+  bpt::write_json(out, fileTree);
 
   return true;
 }
@@ -517,7 +519,8 @@ bool loadJSON(sfmData::SfMData& sfmData, const std::string& filename, ESfMData p
   bpt::ptree fileTree;
 
   // read the json file and initialize the tree
-  bpt::read_json(filename, fileTree);
+  vfs::istream in{filename};
+  bpt::read_json(in, fileTree);
 
   // version
   {

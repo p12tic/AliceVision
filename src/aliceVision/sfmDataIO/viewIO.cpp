@@ -16,8 +16,6 @@
 #include <stdexcept>
 #include <regex>
 
-namespace fs = boost::filesystem;
-
 namespace aliceVision {
 namespace sfmDataIO {
 
@@ -57,7 +55,7 @@ void updateIncompleteView(sfmData::View& view, EViewIdMethod viewIdMethod, const
       }
 
       // Get view image filename without extension
-      const std::string filename = boost::filesystem::path(view.getImagePath()).stem().string();
+      const std::string filename = vfs::path(view.getImagePath()).stem().string();
 
       std::smatch match;
       std::regex_search(filename, match, re);
@@ -93,15 +91,15 @@ void updateIncompleteView(sfmData::View& view, EViewIdMethod viewIdMethod, const
     // check if the rig poseId id is defined
     if(view.isPartOfRig())
     {
-      ALICEVISION_LOG_ERROR("Error: Can't find poseId for'" << fs::path(view.getImagePath()).filename().string() << "' marked as part of a rig." << std::endl);
-      throw std::invalid_argument("Error: Can't find poseId for'" + fs::path(view.getImagePath()).filename().string() + "' marked as part of a rig.");
+      ALICEVISION_LOG_ERROR("Error: Can't find poseId for'" << vfs::path(view.getImagePath()).filename().string() << "' marked as part of a rig." << std::endl);
+      throw std::invalid_argument("Error: Can't find poseId for'" + vfs::path(view.getImagePath()).filename().string() + "' marked as part of a rig.");
     }
     else
       view.setPoseId(view.getViewId());
   }
   else if((!view.isPartOfRig()) && (view.getPoseId() != view.getViewId()))
   {
-    ALICEVISION_LOG_WARNING("PoseId and viewId are different for image '" << fs::path(view.getImagePath()).filename().string() << "'." << std::endl);
+    ALICEVISION_LOG_WARNING("PoseId and viewId are different for image '" << vfs::path(view.getImagePath()).filename().string() << "'." << std::endl);
   }
 }
 
@@ -160,7 +158,7 @@ std::shared_ptr<camera::IntrinsicBase> getViewIntrinsic(
     if(exifWidth > 0 && exifHeight > 0 &&
        (exifWidth != view.getWidth() || exifHeight != view.getHeight()))
     {
-      ALICEVISION_LOG_WARNING("Resized image detected: " << fs::path(view.getImagePath()).filename().string() << std::endl
+      ALICEVISION_LOG_WARNING("Resized image detected: " << vfs::path(view.getImagePath()).filename().string() << std::endl
                           << "\t- real image size: " <<  view.getWidth() << "x" <<  view.getHeight() << std::endl
                           << "\t- image size from exif metadata is: " << exifWidth << "x" << exifHeight << std::endl);
       isResized = true;
@@ -170,7 +168,7 @@ std::shared_ptr<camera::IntrinsicBase> getViewIntrinsic(
   // handle case where focal length (mm) is unset or false
   if(mmFocalLength <= 0.0)
   {
-    ALICEVISION_LOG_WARNING("Image '" << fs::path(view.getImagePath()).filename().string() << "' focal length (in mm) metadata is missing." << std::endl
+    ALICEVISION_LOG_WARNING("Image '" << vfs::path(view.getImagePath()).filename().string() << "' focal length (in mm) metadata is missing." << std::endl
                              << "Can't compute focal length, use default." << std::endl);
   }
   else
@@ -390,7 +388,7 @@ void BuildViewIntrinsicsReport::reportToLog()
     {
         ALICEVISION_LOG_WARNING("The camera found in the database is slightly different for image(s):");
         for (const auto& unsureSensor : unsureSensors)
-            ALICEVISION_LOG_WARNING("image: '" << fs::path(unsureSensor.second.first).filename().string() << "'\n"
+            ALICEVISION_LOG_WARNING("image: '" << vfs::path(unsureSensor.second.first).filename().string() << "'\n"
                           << "\t- image camera brand: " << unsureSensor.first.first << "\n"
                           << "\t- image camera model: " << unsureSensor.first.second << "\n"
                           << "\t- database camera brand: " << unsureSensor.second.second._brand << "\n"
@@ -407,7 +405,7 @@ void BuildViewIntrinsicsReport::reportToLog()
         {
             ss << "\t- camera brand: " << unknownSensor.first.first << "\n"
                << "\t- camera model: " << unknownSensor.first.second << "\n"
-               << "\t   - image: " << fs::path(unknownSensor.second).filename().string() << "\n";
+               << "\t   - image: " << vfs::path(unknownSensor.second).filename().string() << "\n";
         }
         ss << "Please add camera model(s) and sensor width(s) in the database.";
 
@@ -420,7 +418,7 @@ void BuildViewIntrinsicsReport::reportToLog()
         ss << "Intrinsic(s) initialized from 'FocalLengthIn35mmFilm' exif metadata in image(s):\n";
         for (const auto& intrinsicSetFromFocal35mm : intrinsicsSetFromFocal35mm)
         {
-            ss << "\t- image: " << fs::path(intrinsicSetFromFocal35mm.first).filename().string() << "\n"
+            ss << "\t- image: " << vfs::path(intrinsicSetFromFocal35mm.first).filename().string() << "\n"
                << "\t   - sensor width: " << intrinsicSetFromFocal35mm.second.first  << "\n"
                << "\t   - focal length: " << intrinsicSetFromFocal35mm.second.second << "\n";
         }
@@ -617,7 +615,7 @@ std::shared_ptr<camera::IntrinsicBase>
             {
                 // when we don't have a serial number, the folder will become part of the device ID.
                 // This means that 2 images in different folder will NOT share intrinsics.
-                intrinsic->setSerialNumber(fs::path(view.getImagePath()).parent_path().string());
+                intrinsic->setSerialNumber(vfs::path(view.getImagePath()).parent_path().string());
             }
             else if (groupCameraFallback == EGroupCameraFallback::IMAGE)
             {

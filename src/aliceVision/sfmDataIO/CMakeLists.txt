@@ -63,7 +63,8 @@ endif()
 
 alicevision_add_test(sfmDataIO_test.cpp
   NAME "sfmDataIO"
-  LINKS aliceVision_sfmData
+  LINKS aliceVision_vfs
+        aliceVision_sfmData
         aliceVision_sfmDataIO
         aliceVision_feature
         aliceVision_system
@@ -71,7 +72,8 @@ alicevision_add_test(sfmDataIO_test.cpp
 
 alicevision_add_test(sfmDataIOCompatibility_test.cpp
   NAME "sfmDataIOCompatibility"
-  LINKS aliceVision_sfmData
+  LINKS aliceVision_vfs
+        aliceVision_sfmData
         aliceVision_sfmDataIO
         aliceVision_feature
         aliceVision_system
