@@ -9,7 +9,8 @@
 #include <aliceVision/system/Logger.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/trim.hpp>
-#include <fstream>
+#include <aliceVision/vfs/istream.hpp>
+#include <aliceVision/vfs/ostream.hpp>
 
 namespace aliceVision {
 namespace matchingImageCollection {
@@ -102,7 +103,7 @@ bool loadPairsFromFile(const std::string& sFileName, // filename of the list fil
                        int rangeStart,
                        int rangeSize)
 {
-    std::ifstream in(sFileName.c_str());
+    vfs::istream in(sFileName.c_str());
     if (!in.is_open())
     {
         ALICEVISION_LOG_WARNING("loadPairsFromFile: Impossible to read the specified file: \""
@@ -120,7 +121,7 @@ bool loadPairsFromFile(const std::string& sFileName, // filename of the list fil
 
 bool savePairsToFile(const std::string& sFileName, const PairSet& pairs)
 {
-    std::ofstream outStream(sFileName);
+    vfs::ostream outStream(sFileName);
     if (!outStream.is_open())
     {
         ALICEVISION_LOG_WARNING("savePairsToFile: Impossible to open the output specified file: \""
