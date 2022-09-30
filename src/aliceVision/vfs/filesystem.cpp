@@ -230,17 +230,20 @@ bool exists(file_status s) noexcept
 
 bool exists(const path& p)
 {
-    return boost::filesystem::exists(p.boost_path());
+    return vfs::exists(status(p));
 }
 
 bool exists(const path& p, error_code& ec)
 {
-    return boost::filesystem::exists(p.boost_path(), ec);
+    return vfs::exists(status(p, ec));
 }
 
 bool equivalent(const path& p1, const path& p2)
 {
-    return boost::filesystem::equivalent(p1.boost_path(), p2.boost_path());
+    error_code ec;
+    auto result = equivalent(p1, p2, ec);
+    throwIfFailedEc(ec, "equivalent", p1, p2);
+    return result;
 }
 
 bool equivalent(const path& p1, const path& p2, error_code& ec)
@@ -281,17 +284,20 @@ bool is_directory(file_status s) noexcept
 
 bool is_directory(const path& p)
 {
-    return boost::filesystem::is_directory(p.boost_path());
+    return vfs::is_directory(status(p));
 }
 
 bool is_directory(const path& p, error_code& ec)
 {
-    return boost::filesystem::is_directory(p.boost_path(), ec);
+    return vfs::is_directory(status(p, ec));
 }
 
 bool is_empty(const path& p)
 {
-    return boost::filesystem::is_empty(p.boost_path());
+    error_code ec;
+    auto result = is_empty(p, ec);
+    throwIfFailedEc(ec, "is_empty", p);
+    return result;
 }
 
 bool is_empty(const path& p, error_code& ec)
@@ -306,12 +312,12 @@ bool is_other(file_status s) noexcept
 
 bool is_other(const path& p)
 {
-    return boost::filesystem::is_other(p.boost_path());
+    return vfs::is_other(status(p));
 }
 
 bool is_other(const path& p, error_code& ec)
 {
-    return boost::filesystem::is_other(p.boost_path(), ec);
+    return vfs::is_other(status(p, ec));
 }
 
 bool is_regular_file(file_status s) noexcept
@@ -321,12 +327,12 @@ bool is_regular_file(file_status s) noexcept
 
 bool is_regular_file(const path& p)
 {
-    return boost::filesystem::is_regular_file(p.boost_path());
+    return vfs::is_regular_file(status(p));
 }
 
 bool is_regular_file(const path& p, error_code& ec)
 {
-    return boost::filesystem::is_regular_file(p.boost_path(), ec);
+    return vfs::is_regular_file(status(p, ec));
 }
 
 bool is_symlink(file_status s)
@@ -336,12 +342,12 @@ bool is_symlink(file_status s)
 
 bool is_symlink(const path& p)
 {
-    return boost::filesystem::is_symlink(p.boost_path());
+    return vfs::is_symlink(symlink_status(p));
 }
 
 bool is_symlink(const path& p, error_code& ec)
 {
-    return boost::filesystem::is_symlink(p.boost_path(), ec);
+    return vfs::is_symlink(symlink_status(p, ec));
 }
 
 std::time_t last_write_time(const path& p)
@@ -473,7 +479,10 @@ space_info space(const path& p, error_code& ec)
 
 file_status status(const path& p)
 {
-    return boost::filesystem::status(p.boost_path());
+    error_code ec;
+    auto result = status(p, ec);
+    throwIfFailedEc(ec, "status", p);
+    return result;
 }
 
 file_status status(const path& p, error_code& ec)
@@ -488,7 +497,10 @@ bool status_known(file_status s) noexcept
 
 file_status symlink_status(const path& p)
 {
-    return boost::filesystem::symlink_status(p.boost_path());
+    error_code ec;
+    auto result = symlink_status(p, ec);
+    throwIfFailedEc(ec, "symlink_status", p);
+    return result;
 }
 
 file_status symlink_status(const path& p, error_code& ec)
