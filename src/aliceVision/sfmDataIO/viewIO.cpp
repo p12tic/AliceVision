@@ -16,6 +16,7 @@
 #include "aliceVision/utils/filesIO.hpp"
 #include <aliceVision/system/Logger.hpp>
 
+#include <boost/algorithm/string/join.hpp>
 #include <stdexcept>
 #include <regex>
 
