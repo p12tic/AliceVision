@@ -27,6 +27,8 @@ namespace aliceVision
     template <typename T>
     class Image : public Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
     {
+      // WARNING: note that the order of arguments to resize() is swapped in Image compared to
+      // the underlying Eigen::Matrix.
 
     public:
       typedef T Tpixel; //-- Pixel data type
