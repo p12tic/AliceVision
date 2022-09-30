@@ -12,6 +12,7 @@
 #include <aliceVision/sfm/BundleAdjustment.hpp>
 #include <aliceVision/sfm/LocalBundleAdjustmentGraph.hpp>
 #include <aliceVision/numeric/numeric.hpp>
+#include <aliceVision/system/ParallelFor.hpp>
 
 #include <ceres/ceres.h>
 
@@ -37,7 +38,7 @@ public:
   {
     CeresOptions(bool verbose = true, bool multithreaded = true)
       : verbose(verbose)
-      , nbThreads(multithreaded ? omp_get_max_threads() : 1) // set number of threads, 1 if OpenMP is not enabled
+      , nbThreads(multithreaded ? system::getMaxParallelThreadCount() : 1) // set number of threads, 1 if OpenMP is not enabled
     {
       setDenseBA(); // use dense BA by default
       lossFunction.reset(new ceres::HuberLoss(Square(4.0)));

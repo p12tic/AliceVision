@@ -11,6 +11,7 @@
 #include <aliceVision/alicevision_omp.hpp>
 #include <aliceVision/sfm/BundleAdjustment.hpp>
 #include <aliceVision/sfm/LocalBundleAdjustmentGraph.hpp>
+#include <aliceVision/system/ParallelFor.hpp>
 
 #include <ceres/ceres.h>
 #include "liealgebra.hpp"
@@ -36,7 +37,7 @@ public:
   {
     CeresOptions(bool verbose = true, bool multithreaded = true)
       : verbose(verbose)
-      , nbThreads(multithreaded ? omp_get_max_threads() : 1) // set number of threads, 1 if OpenMP is not enabled
+      , nbThreads(multithreaded ? system::getMaxParallelThreadCount() : 1) // set number of threads, 1 if OpenMP is not enabled
     {
       setDenseBA(); // use dense BA by default
     }
