@@ -12,8 +12,6 @@
 #include <aliceVision/camera/cameraCommon.hpp>
 #include <aliceVision/camera/IntrinsicBase.hpp>
 
-#include <boost/filesystem.hpp>
-
 #include <memory>
 
 namespace aliceVision {

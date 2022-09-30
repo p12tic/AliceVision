@@ -24,6 +24,7 @@ alicevision_add_library(aliceVision_mvsUtils
     OpenImageIO::OpenImageIO_Util
   PRIVATE_LINKS
     aliceVision_system
+    aliceVision_vfs
     Boost::filesystem
     Boost::boost
 )
