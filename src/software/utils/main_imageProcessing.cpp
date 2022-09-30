@@ -450,10 +450,12 @@ void saveImage(image::Image<image::RGBAfColor>& image, const std::string& inputP
 
     oiio::ParamValueList metadata = image::readImageMetadata(metadataFilePath);
 
+    auto options = image::ImageWriteOptions().toColorSpace(outputColorSpace);
+
     if(isEXR)
     {
         // Select storage data type
-        metadata.push_back(oiio::ParamValue("AliceVision:storageDataType", image::EStorageDataType_enumToString(storageDataType)));
+        options.storageDataType(storageDataType);
     }
 
     // Save image
@@ -463,21 +465,18 @@ void saveImage(image::Image<image::RGBAfColor>& image, const std::string& inputP
     {
         image::Image<float> outputImage;
         image::ConvertPixelType(image, &outputImage);
-        image::writeImage(outputPath, outputImage,
-                          image::ImageWriteOptions().toColorSpace(outputColorSpace), metadata);
+        image::writeImage(outputPath, outputImage, options, metadata);
     }
     else if(outputFormat == EImageFormat::RGB)
     {
         image::Image<image::RGBfColor> outputImage;
         image::ConvertPixelType(image, &outputImage);
-        image::writeImage(outputPath, outputImage,
-                          image::ImageWriteOptions().toColorSpace(outputColorSpace), metadata);
+        image::writeImage(outputPath, outputImage, options, metadata);
     }
     else 
     {
         // Already in RGBAf
-        image::writeImage(outputPath, image,
-                          image::ImageWriteOptions().toColorSpace(outputColorSpace), metadata);
+        image::writeImage(outputPath, image, options, metadata);
     }
 }
 

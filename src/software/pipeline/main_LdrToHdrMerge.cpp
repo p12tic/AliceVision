@@ -315,9 +315,8 @@ int aliceVision_main(int argc, char** argv)
 
         // Write an image with parameters from the target view
         oiio::ParamValueList targetMetadata = image::readImageMetadata(targetView->getImagePath());
-        targetMetadata.push_back(oiio::ParamValue("AliceVision:storageDataType", image::EStorageDataType_enumToString(storageDataType)));
-
-        image::writeImage(hdrImagePath, HDRimage, image::ImageWriteOptions(), targetMetadata);
+        image::writeImage(hdrImagePath, HDRimage,
+                          image::ImageWriteOptions().storageDataType(storageDataType), targetMetadata);
     }
 
     return EXIT_SUCCESS;
