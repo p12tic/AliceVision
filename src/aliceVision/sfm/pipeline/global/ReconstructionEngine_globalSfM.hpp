@@ -28,8 +28,8 @@ public:
 
   ~ReconstructionEngine_globalSfM();
 
-  void SetFeaturesProvider(feature::FeaturesPerView* featuresPerView);
-  void SetMatchesProvider(matching::PairwiseMatches* provider);
+  void SetFeaturesProvider(const feature::FeaturesPerView* featuresPerView);
+  void SetMatchesProvider(const matching::PairwiseMatches* provider);
 
   void SetRotationAveragingMethod(ERotationAveragingMethod eRotationAveragingMethod);
   void SetTranslationAveragingMethod(ETranslationAveragingMethod eTranslationAveragingMethod);
@@ -68,8 +68,8 @@ private:
   EFeatureConstraint _featureConstraint = EFeatureConstraint::BASIC;
 
   // Data provider
-  feature::FeaturesPerView* _featuresPerView;
-  matching::PairwiseMatches* _pairwiseMatches;
+  const feature::FeaturesPerView* _featuresPerView;
+  const matching::PairwiseMatches* _pairwiseMatches;
 
   std::shared_ptr<feature::FeaturesPerView> _normalizedFeaturesPerView;
 };

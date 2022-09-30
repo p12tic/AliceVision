@@ -1691,7 +1691,7 @@ struct ObservationData
 };
 
 ObservationData getObservationData(const SfMData& scene,
-                                   feature::FeaturesPerView* featuresPerView,
+                                   const feature::FeaturesPerView* featuresPerView,
                                    IndexT viewId, const track::Track& track)
 {
     const View* view = scene.getViews().at(viewId).get();

@@ -100,12 +100,12 @@ public:
 
   ~ReconstructionEngine_sequentialSfM() override;
 
-  void setFeatures(feature::FeaturesPerView* featuresPerView)
+  void setFeatures(const feature::FeaturesPerView* featuresPerView)
   {
     _featuresPerView = featuresPerView;
   }
 
-  void setMatches(matching::PairwiseMatches* pairwiseMatches)
+  void setMatches(const matching::PairwiseMatches* pairwiseMatches)
   {
     _pairwiseMatches = pairwiseMatches;
   }
@@ -351,8 +351,8 @@ private:
 
   // Data providers
 
-  feature::FeaturesPerView* _featuresPerView;
-  matching::PairwiseMatches* _pairwiseMatches;
+  const feature::FeaturesPerView* _featuresPerView;
+  const matching::PairwiseMatches* _pairwiseMatches;
 
   // Pyramid scoring
 

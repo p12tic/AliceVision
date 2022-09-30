@@ -69,7 +69,7 @@ ReconstructionEngine_globalSfM::~ReconstructionEngine_globalSfM()
   }
 }
 
-void ReconstructionEngine_globalSfM::SetFeaturesProvider(feature::FeaturesPerView* featuresPerView)
+void ReconstructionEngine_globalSfM::SetFeaturesProvider(const feature::FeaturesPerView* featuresPerView)
 {
   _featuresPerView = featuresPerView;
 
@@ -103,7 +103,7 @@ void ReconstructionEngine_globalSfM::SetFeaturesProvider(feature::FeaturesPerVie
     });
 }
 
-void ReconstructionEngine_globalSfM::SetMatchesProvider(matching::PairwiseMatches* provider)
+void ReconstructionEngine_globalSfM::SetMatchesProvider(const matching::PairwiseMatches* provider)
 {
   _pairwiseMatches = provider;
 }
